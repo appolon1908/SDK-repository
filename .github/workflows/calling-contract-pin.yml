@@ -7,6 +7,7 @@ on:
       - ".github/workflows/calling-contract-pin.yml"
       - ".github/workflows/compatibility.yml"
       - "scripts/validate_calling_contract_pin.py"
+      - "contracts/vendor/calling-contract-authority/**"
   push:
     branches: ["development", "staging", "main", "production"]
     paths:
@@ -14,6 +15,7 @@ on:
       - ".github/workflows/calling-contract-pin.yml"
       - ".github/workflows/compatibility.yml"
       - "scripts/validate_calling_contract_pin.py"
+      - "contracts/vendor/calling-contract-authority/**"
 
 permissions:
   contents: read
