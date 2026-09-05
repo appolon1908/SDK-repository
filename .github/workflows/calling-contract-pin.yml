@@ -8,7 +8,7 @@ on:
       - ".github/workflows/compatibility.yml"
       - "scripts/validate_calling_contract_pin.py"
   push:
-    branches: ["main", "production"]
+    branches: ["development", "staging", "main", "production"]
     paths:
       - ".codestra/calling-contract.lock.json"
       - ".github/workflows/calling-contract-pin.yml"
