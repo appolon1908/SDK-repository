@@ -48,11 +48,14 @@ def compute_authority_digest() -> str:
     source = json.loads(VENDOR_SOURCE.read_text(encoding="utf-8"))
     lines: list[str] = []
     for component in source["components"]:
-        vendored = VENDOR_DIR / component["vendored_path"]
+        # Vendored files sit at the same relative path as in the authority
+        # repo (see the "layout" note in calling-contract-authority.source.json),
+        # so their own internal relative $ref values resolve correctly.
+        vendored = VENDOR_DIR / component["source_path"]
         actual = sha256_file(vendored)
         if actual != component["sha256"]:
             raise ValueError(
-                f"vendored authority file {component['vendored_path']} does not match its pinned sha256"
+                f"vendored authority file {component['source_path']} does not match its pinned sha256"
                 " (contracts/vendor/calling-contract-authority/calling-contract-authority.source.json is stale or the file was edited)"
             )
         lines.append(f"{actual}  {component['source_path']}\n")
@@ -134,7 +137,7 @@ def self_test() -> None:
     # compared to the hardcoded literal above: corrupt a real vendored file,
     # confirm the otherwise-valid EXPECTED document is now rejected, and
     # always restore the original content even if the assertion fails.
-    tampered = VENDOR_DIR / "codestra-calling-api.v1.openapi.yaml"
+    tampered = VENDOR_DIR / "contracts/telephony/codestra-calling-api.v1.openapi.yaml"
     original = tampered.read_bytes()
     try:
         tampered.write_bytes(original + b"\n# tampered\n")
