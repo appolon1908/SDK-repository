@@ -1,0 +1,30 @@
+{
+  "repository": "appolon1908-hue/codestra-production-platform",
+  "source_sha": "21e985a67d1656c840fa9629d68b917adcf5d7da",
+  "authority_issue": "https://github.com/appolon1908-hue/codestra-production-platform/issues/257",
+  "digest_algorithm": "sha256",
+  "canonical_digest": "b39cdffe56a8185c91174228f0423df68b1137f34875f6ee52f9914f904bf724",
+  "digest_command": "scripts/telephony-contract-digest.sh",
+  "components": [
+    {
+      "source_path": "contracts/telephony/codestra-calling-api.v1.openapi.yaml",
+      "vendored_path": "codestra-calling-api.v1.openapi.yaml",
+      "sha256": "bed327830988df113fbe7f2bb3f0d01a7e1aea19b756b82c8aceaa08c76a8904"
+    },
+    {
+      "source_path": "contracts/telephony/codestra-calling-ecosystem.v1.yaml",
+      "vendored_path": "codestra-calling-ecosystem.v1.yaml",
+      "sha256": "f1ea6f90eef6115a435703016081feed47cfc1ed72e343d537aca258c3abcd5d"
+    },
+    {
+      "source_path": "contracts/telephony/codestra-calling-events.v1.asyncapi.yaml",
+      "vendored_path": "codestra-calling-events.v1.asyncapi.yaml",
+      "sha256": "368910d0caffdc2c24bb23014f6247588b814401fbfbe608684db4a34e6f089e"
+    },
+    {
+      "source_path": "schemas/integration-event-envelope-v1.schema.json",
+      "vendored_path": "integration-event-envelope-v1.schema.json",
+      "sha256": "81fd81d9602daac79144c4bbb3e3ce506e34f8551b5dd5ac4bcf4502c0c1148e"
+    }
+  ]
+}
