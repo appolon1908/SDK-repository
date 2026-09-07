@@ -41,7 +41,7 @@ jobs:
       - name: Install exact dependencies
         run: pnpm install --frozen-lockfile
       - name: Validate workflow security policy
-        run: pnpm workflows:validate
+        run: pnpm workflows:validate && pnpm workflows:validate:negative
       - name: Validate current contracts semantically
         run: pnpm contracts:validate
       - name: Materialize base public contract

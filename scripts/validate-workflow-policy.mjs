@@ -1,7 +1,7 @@
 import { readdir, readFile } from "node:fs/promises";
 import { parse } from "yaml";
 
-const directory = ".github/workflows";
+const directory = process.env.WORKFLOW_DIRECTORY ?? ".github/workflows";
 const files = (await readdir(directory)).filter((name) => /\.ya?ml$/u.test(name));
 const failures = [];
 
@@ -35,11 +35,25 @@ for (const file of files) {
     if (isPullRequest && JSON.stringify(job).includes("secrets.")) {
       failures.push(`${path}:${jobName}: pull request jobs must not consume secrets`);
     }
+    const jobPermissions = job.permissions ?? {};
+    if (isPullRequest && typeof jobPermissions === "object") {
+      for (const [scope, level] of Object.entries(jobPermissions)) {
+        if (level === "write") failures.push(`${path}:${jobName}: pull request ${scope}: write is forbidden`);
+      }
+    }
     for (const step of job.steps ?? []) {
+      if (typeof step.uses === "string" && !step.uses.startsWith("./") &&
+          !/@[0-9a-f]{40}$/u.test(step.uses)) {
+        failures.push(`${path}:${jobName}: third-party action must use a full commit SHA: ${step.uses}`);
+      }
       if (typeof step.uses === "string" && step.uses.startsWith("actions/checkout@")) {
         if (step.with?.["persist-credentials"] !== false) {
           failures.push(`${path}:${jobName}: checkout must set persist-credentials: false`);
         }
+      }
+      if (isPullRequest && typeof step.run === "string" &&
+          /(^|[;&|\n]\s*)(git\s+push|gh\s+(pr|release)\s+|npm\s+publish|pnpm\s+publish)(\s|$)/u.test(step.run)) {
+        failures.push(`${path}:${jobName}: pull request workflow contains a source or publication mutation`);
       }
     }
   }

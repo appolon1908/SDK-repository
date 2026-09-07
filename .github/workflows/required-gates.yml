@@ -53,6 +53,7 @@ jobs:
           corepack enable
           pnpm install --frozen-lockfile
           pnpm workflows:validate
+          pnpm workflows:validate:negative
           pnpm contracts:validate
           pnpm contracts:validate:negative
           pnpm build
