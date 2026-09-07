@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import type { FastifyInstance } from "fastify";
-import { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../../src/db/prisma.js";
 import { loadEnv, type Env } from "../../src/env.js";
 import { JwtAuthenticator } from "../../src/auth/jwt.js";
 import { PrismaIdempotencyStore } from "../../src/idempotency/prisma-store.js";
@@ -47,7 +48,7 @@ export async function createTestContext(
     ...(options.trustedProxyCidrs === undefined ? {} : { TRUSTED_PROXY_CIDRS: options.trustedProxyCidrs }),
   });
 
-  const prisma = new PrismaClient({ datasources: { db: { url: env.DATABASE_URL } } });
+  const prisma = createPrismaClient(env.DATABASE_URL);
   const idempotencyStore = new PrismaIdempotencyStore(prisma);
   const jwtAuthenticator = new JwtAuthenticator(env);
   const restrictedGatewayClient = new RestrictedGatewayClient(env);

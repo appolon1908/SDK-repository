@@ -51,6 +51,7 @@ COPY --from=build /workspace/packages/webhook-sdk/dist packages/webhook-sdk/dist
 COPY --from=build /workspace/services/middleware/package.json services/middleware/package.json
 COPY --from=build /workspace/services/middleware/dist services/middleware/dist
 COPY --from=build /workspace/services/middleware/prisma services/middleware/prisma
+COPY --from=build /workspace/services/middleware/prisma.config.ts services/middleware/prisma.config.ts
 COPY --from=build /workspace/services/middleware/node_modules services/middleware/node_modules
 COPY --from=build /workspace/node_modules node_modules
 WORKDIR /workspace/services/middleware

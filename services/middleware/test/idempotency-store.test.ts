@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
-import { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@prisma/client";
+import { createPrismaClient } from "../src/db/prisma.js";
 import {
   ConnectorIndeterminateError,
   ConnectorRunner,
@@ -24,13 +25,18 @@ let tenantId: string;
 
 beforeAll(async () => {
   if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is required.");
-  prisma = new PrismaClient({ datasources: { db: { url: process.env.DATABASE_URL } } });
+  prisma = createPrismaClient(process.env.DATABASE_URL!);
   tenantId = randomUUID();
   await prisma.tenant.create({ data: { id: tenantId } });
 });
 
 afterAll(async () => {
   await prisma.$disconnect();
+});
+
+it("requires an explicit database URL instead of using ambient pg connection defaults", () => {
+  expect(() => createPrismaClient("")).toThrow("DATABASE_URL is required");
+  expect(() => createPrismaClient("   ")).toThrow("DATABASE_URL is required");
 });
 
 function connector(options: {
@@ -256,7 +262,7 @@ describe("PrismaIdempotencyStore durable state machine (real Postgres)", () => {
     // A brand-new PrismaClient/store, as a restarted process would create,
     // must see the exact same durable outcome and still replay instead of
     // re-invoking the provider.
-    const restartedPrisma = new PrismaClient({ datasources: { db: { url: process.env.DATABASE_URL } } });
+    const restartedPrisma = createPrismaClient(process.env.DATABASE_URL!);
     try {
       const secondProcessStore = new PrismaIdempotencyStore(restartedPrisma);
       const replay = await new ConnectorRunner({ idempotencyStore: secondProcessStore }).execute(adapter, context, command);
