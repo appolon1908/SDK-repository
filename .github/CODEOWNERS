@@ -1,0 +1,8 @@
+* @appolon1908-hue
+
+/contracts/ @appolon1908-hue
+/.github/ @appolon1908-hue
+/packages/connector-kit/ @appolon1908-hue
+/packages/provider-adapters/ @appolon1908-hue
+/packages/webhook-sdk/ @appolon1908-hue
+/integrations/n8n-nodes/ @appolon1908-hue

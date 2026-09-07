@@ -1,0 +1,17 @@
+name: Contract change
+description: Propose a versioned network or event contract change.
+title: "contract: "
+labels: ["contract"]
+body:
+  - type: textarea
+    id: owner
+    attributes: {label: Boundary and owner, description: Public, Middleware-private, restricted gateway, library-only, or event-only.}
+    validations: {required: true}
+  - type: textarea
+    id: compatibility
+    attributes: {label: Compatibility and migration impact}
+    validations: {required: true}
+  - type: textarea
+    id: evidence
+    attributes: {label: Consumer and provider evidence required}
+    validations: {required: true}

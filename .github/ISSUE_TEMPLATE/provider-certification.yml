@@ -1,0 +1,20 @@
+name: Provider certification
+description: Track external restricted-gateway conformance evidence.
+title: "certification(provider): "
+labels: ["certification"]
+body:
+  - type: input
+    id: provider
+    attributes: {label: Provider or product-local gateway}
+    validations: {required: true}
+  - type: textarea
+    id: evidence
+    attributes: {label: Required evidence, description: Include mTLS identity, tenant binding, idempotency, reconciliation, webhook verification, and disabled-live defaults.}
+    validations: {required: true}
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety
+      options:
+        - label: No live delivery, dialing, or production mutation is authorized by this issue.
+          required: true
