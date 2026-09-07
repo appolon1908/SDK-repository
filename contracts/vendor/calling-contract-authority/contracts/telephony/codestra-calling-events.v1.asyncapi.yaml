@@ -23,16 +23,10 @@ channels:
     parameters:
       tenant_id:
         description: Ticket-authorized opaque tenant subject token
-        schema:
-          $ref: '#/components/schemas/NatsSubjectToken'
       campaign_id:
         description: Ticket-authorized opaque campaign subject token
-        schema:
-          $ref: '#/components/schemas/NatsSubjectToken'
       agent_id:
         description: Ticket-authorized opaque agent subject token
-        schema:
-          $ref: '#/components/schemas/NatsSubjectToken'
     messages:
       agentEvent:
         $ref: '#/components/messages/AgentEvent'
@@ -45,12 +39,8 @@ channels:
     parameters:
       tenant_id:
         description: Ticket-authorized opaque tenant subject token
-        schema:
-          $ref: '#/components/schemas/NatsSubjectToken'
       campaign_id:
         description: Ticket-authorized opaque campaign subject token
-        schema:
-          $ref: '#/components/schemas/NatsSubjectToken'
     messages:
       agentEvent:
         $ref: '#/components/messages/AgentEvent'
