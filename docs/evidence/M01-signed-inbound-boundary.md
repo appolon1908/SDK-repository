@@ -9,6 +9,7 @@ Date: 2026-09-07. Base: accepted `integration/v0.1` commit `9fb3e13c52027b37aead
 - Canonical CloudEvents now require `tenantid`; event ID, tenant, source, type and full payload schemas are checked before dispatch. Generated n8n schema data is compared against canonical contracts in CI.
 - Shared Redis security claims use tenant/event keys, atomic `SET NX EX`, a SHA-256 body fingerprint, at least 24-hour retention, no eviction and confirmed local AOF fsync. A replay, store failure or ambiguous outcome emits no workflow data. Claims are never released after uncertainty.
 - The node uses n8n's request/raw-body and response APIs and returns `noWebhookResponse`. It does not call restricted systems or become a business-write authority.
+- Optional Svix handoff enforces the newly required tenant UUID at runtime and compares it with the command tenant before resolving an application or sending. It remains disabled by default. Four review regressions (missing, malformed, mismatched and equivalent-case tenant IDs) failed before this follow-up and pass after it.
 
 ## Reproducible checks
 
