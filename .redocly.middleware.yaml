@@ -15,3 +15,4 @@ rules:
   security-defined: off
   operation-summary: off
   operation-4xx-response: off
+  info-license: off
