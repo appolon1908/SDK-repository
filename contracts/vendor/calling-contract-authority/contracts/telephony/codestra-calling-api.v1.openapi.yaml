@@ -208,7 +208,7 @@ paths:
 
         '
       servers:
-      - url: https://codestra-odoo-internal-proxy:8443
+      - url: https://redacted-internal-odoo-proxy.invalid:8443
       x-codestra-exposure: private
       security:
       - internalMtls: []
@@ -307,7 +307,7 @@ paths:
 
         '
       servers:
-      - url: https://codestra-odoo-internal-proxy:8443
+      - url: https://redacted-internal-odoo-proxy.invalid:8443
       x-codestra-exposure: private
       security:
       - internalMtls: []
@@ -484,9 +484,7 @@ paths:
       security: []
       responses:
         '200':
-          description: Exact source
-          image: null
-          and contract identity: null
+          description: 'Exact source and contract identity'
   /metrics:
     get:
       operationId: metrics

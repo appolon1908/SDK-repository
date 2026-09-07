@@ -68,6 +68,18 @@ const definitions = [
     path: "contracts/asyncapi/codestra-events.asyncapi.yaml",
     expectedVersion: "3.0.0",
   },
+  {
+    kind: "openapi",
+    path: "contracts/vendor/calling-contract-authority/contracts/telephony/codestra-calling-api.v1.openapi.yaml",
+    expectedVersion: "3.1.0",
+    externalEvidence: true,
+  },
+  {
+    kind: "asyncapi",
+    path: "contracts/vendor/calling-contract-authority/contracts/telephony/codestra-calling-events.v1.asyncapi.yaml",
+    expectedVersion: "3.0.0",
+    externalEvidence: true,
+  },
 ];
 
 const failures = [];
@@ -166,7 +178,7 @@ try {
 
 const schemaValidation = spawnSync(
   process.execPath,
-  ["scripts/validate-json-schemas.mjs", "contracts/schemas"],
+  ["scripts/validate-json-schemas.mjs", "contracts/schemas", "contracts/vendor/calling-contract-authority/schemas"],
   { encoding: "utf8", maxBuffer: 10 * 1024 * 1024 },
 );
 if (schemaValidation.status !== 0) {
