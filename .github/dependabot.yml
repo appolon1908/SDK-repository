@@ -48,14 +48,11 @@ updates:
     commit-message:
       prefix: "chore(deps)"
 
-  - package-ecosystem: "docker"
-    directory: "/services/camel-protocol-gateway"
-    target-branch: "development"
-    schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
-    commit-message:
-      prefix: "chore(deps)"
+  # No docker entry for services/camel-protocol-gateway: its Dockerfile's
+  # FROM lines are bare ARG placeholders (MAVEN_IMAGE/RUNTIME_IMAGE),
+  # resolved at build time from repository variables rather than a literal
+  # image reference in the file -- Dependabot has nothing to scan there.
+  # See docs/FEATURE_ROADMAP.md for tracking this separately.
 
   - package-ecosystem: "docker"
     directory: "/apps/admin-console"

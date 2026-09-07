@@ -40,6 +40,14 @@ concrete gap it closes, not just a general direction.
   (used ad hoc on a few PRs this session) collapses "wait for CI, notice approval, merge" into
   one step. Making it the default for PRs opened by automation — rather than something enabled
   PR-by-PR — would remove most of the manual status-checking this session did by hand.
+- **Track `camel-protocol-gateway`'s base images somewhere Dependabot can reach.** Its
+  Dockerfile's `FROM ${MAVEN_IMAGE}` / `FROM ${RUNTIME_IMAGE}` are bare ARG placeholders with no
+  literal reference in the file — the actual images are supplied at build time via the
+  `CAMEL_GATEWAY_MAVEN_IMAGE`/`CAMEL_GATEWAY_RUNTIME_IMAGE` repository variables (see
+  `docker-publish.yml`). Dependabot's `docker` ecosystem has nothing to scan there, so this
+  image is the one exception to the Dockerfile coverage added elsewhere in this roadmap. Either
+  store the pinned references in a file Dependabot can read, or add separate automation that
+  checks and updates the repository variables.
 - **A CODEOWNERS file.** Every PR this session — regardless of which part of the repo it
   touched — needed the same one human reviewer found and pinged manually. A `CODEOWNERS` file
   would let GitHub auto-request the right reviewer(s) the moment a PR opens, instead of that
