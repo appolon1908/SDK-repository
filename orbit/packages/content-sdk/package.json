@@ -1,0 +1,25 @@
+{
+  "name": "@corporate/content-sdk",
+  "version": "2.0.0",
+  "description": "Same-origin client for Codestra brand, shell, footer, navigation, page, content, asset, publication, and rollback APIs.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

@@ -142,7 +142,7 @@ describe("codestra_sdk facade", () => {
   it("preserves legacy idempotency-key bounds on legacy calls", () => {
     const sdk = testSdk(vi.fn<typeof fetch>());
 
-    expect(() => sdk.ai.generate({ prompt: "Summarize this lead." }, { idempotencyKey: "12345678" })).toThrow(
+    expect(() => sdk.ai.generate({ task: "summarize", input: "Summarize this lead." }, { idempotencyKey: "12345678" })).toThrow(
       "idempotencyKey must contain between 16 and 128 characters.",
     );
     expect(() => sdk.ai.generate({ prompt: "Summarize this lead." }, { idempotencyKey: "x".repeat(129) })).toThrow(
@@ -211,7 +211,7 @@ describe("codestra_sdk facade", () => {
     const sdk = testSdk(fetchMock);
 
     await sdk.marketing.campaigns.list();
-    await sdk.ai.generate({ prompt: "Summarize this lead." }, { idempotencyKey });
+    await sdk.ai.generate({ task: "summarize", input: "Summarize this lead." }, { idempotencyKey });
     await sdk.communication.messages.send(
       { channel: "email", to: ["customer@example.com"], content: { subject: "Hi", text: "Hello" } },
       { idempotencyKey },

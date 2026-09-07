@@ -1,0 +1,38 @@
+# Every service Dockerfile in this monorepo builds with the repository root
+# as its context (see each Dockerfile's header comment), so this single
+# root .dockerignore covers all of them.
+
+.git/
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.next/
+**/.next/
+coverage/
+**/coverage/
+.turbo/
+**/.turbo/
+target/
+**/target/
+*.tsbuildinfo
+apps/developer-portal/public/api-reference.html
+
+.env
+.env.*
+!.env.example
+
+*.log
+.DS_Store
+
+__pycache__/
+**/__pycache__/
+*.py[cod]
+.pytest_cache/
+**/.pytest_cache/
+*.egg-info/
+**/*.egg-info/
+
+.pact/
+pact/logs/
+pact/pacts/

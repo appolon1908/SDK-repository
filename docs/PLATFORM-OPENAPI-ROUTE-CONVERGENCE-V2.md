@@ -23,10 +23,46 @@ This branch replaces manifest/string-based SDK readiness with exact accepted Ope
 /v1/marketing/campaigns
   Owner: appolon1908-hue/Codestra-Marketing-.
   Action: import/validate the accepted Marketing OpenAPI and generate the Marketing client.
+  Status: DONE. The invented contract didn't match the real one: the real endpoint
+  takes no cursor/limit/status query params and returns a bare Campaign[], not a
+  paginated {items,nextCursor} envelope, and Campaign/CampaignCreate had entirely
+  different field names (objective, daily_budget_minor, currency, state,
+  resource_version vs. the invented channel/status/budget). Corrected in
+  contracts/openapi/codestra-platform.openapi.yaml against a vendored, pinned
+  snapshot of the real contract (contracts/vendor/marketing-runtime-current.*,
+  produced by scripts/import-marketing-runtime-contract.mjs). codestra_sdk's
+  marketing.campaigns.list() no longer sends the nonexistent query params.
+  No dedicated Marketing client package exists yet -- product code still goes
+  through the unified facade.
 
 /v1/ai/generate
   Owner: appolon1908-hue/Codestra-AI.
   Action: import/validate the accepted AI OpenAPI and generate the AI client.
+  Status: DONE. This was a real bug, not just a documentation gap: the invented
+  contract was `{prompt} -> 200 {output}` (synchronous), but the real AI Gateway
+  requires `{task, input}` with additionalProperties:false (so `{prompt}` gets
+  a 422) and returns `202 {request_id, status, ...}` (an async durable request,
+  read back via GET /v1/ai/requests/{request_id} on the real service -- not yet
+  exposed on this facade). codestra.ai.generate()'s real callers could never have
+  worked against the real backend. Corrected the same way as Marketing, against
+  contracts/vendor/ai-runtime-current.* (scripts/import-ai-runtime-contract.mjs).
+  packages/codestra_sdk's GenerateAiInput and python/codestra_sdk/ai.py's
+  AIClient.generate() both updated to match.
+
+  Both corrections needed a gate change: scripts/check-contract-drift.mjs
+  (the breaking-change gate) previously had no way to distinguish "this
+  corrects an invented shape toward a real upstream contract" from "this is
+  an arbitrary narrowing break" -- it rejected the correction outright, the
+  same way it rejected the crm/leads removal below. Added a new, narrow,
+  verified escape hatch: an operation carrying
+  `x-codestra-corrects-invented-contract: {authority, sourceSha}` is
+  cross-checked against the cited vendored authority's actual shape
+  (required properties, parameter requiredness, response type/status) and
+  only skipped from the normal diff if it genuinely matches; a citation that
+  doesn't match throws instead of silently passing. See
+  scripts/check-contract-drift.mjs's `verifyRuntimeAuthorityCorrection` and
+  the two negative fixtures in scripts/test-contract-drift-detector.mjs
+  proving both a mismatched shape and a wrong sourceSha are still rejected.
 
 /v1/crm/leads
   Prohibited direct CRM edge.
@@ -39,9 +75,13 @@ This branch replaces manifest/string-based SDK readiness with exact accepted Ope
   manifest's compatibilityOnlyEndpointPaths, for the published sunset window
   docs/production/MIDDLEWARE-SDK-CONTRACT-DRIFT.md requires: the breaking-change
   gate (scripts/check-contract-drift.mjs) unconditionally rejects deleting a
-  contract path, with no exemption for an already-deprecated operation, so final
-  removal from the contract needs that gate extended first or a deliberately
-  accepted breaking-change exception -- a separate, follow-up decision.
+  contract path, with no exemption for an already-deprecated operation. The
+  vendored-runtime-authority escape hatch added for the Marketing/AI corrections
+  below does not cover this case -- it verifies a correction against a real
+  upstream shape, and there is no positive upstream shape to cite for "this
+  path should stop existing". Final removal still needs a distinct, deliberate
+  exception (or a published-sunset grace mechanism) -- a separate, follow-up
+  decision.
 
 /v1/workflow/runs
   Superseded orchestration vocabulary.

@@ -13,7 +13,7 @@ const codestra = createCodestraSdk({
 });
 
 await codestra.marketing.campaigns.list();
-await codestra.ai.generate({ prompt: "Summarize this lead." }, { idempotencyKey });
+await codestra.ai.generate({ task: "summarize", input: "Summarize this lead." }, { idempotencyKey });
 await codestra.communication.messages.send(
   { channel: "email", to: ["customer@example.com"], content: { subject: "Hi", text: "Hello" } },
   { idempotencyKey },

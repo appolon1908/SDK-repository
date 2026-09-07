@@ -176,6 +176,33 @@ const cases = [
       ),
     expectedSubstring: "type changed",
   },
+  {
+    // Proves the vendored-runtime-authority correction escape hatch (added
+    // to fix /v1/ai/generate and /v1/marketing/campaigns, which were
+    // invented before the real Codestra-AI/Codestra-Marketing- contracts
+    // were available and didn't match them) actually cross-checks the
+    // claim instead of trusting the annotation. A citation whose shape
+    // doesn't match the pinned authority must still be rejected as
+    // breaking drift, not silently waved through.
+    name: "a runtime-authority correction that doesn't actually match its cited authority",
+    file: "contracts/openapi/codestra-platform.openapi.yaml",
+    corrupt: (text) => text.replace("required: [task, input]", "required: [task]"),
+    expectedSubstring: "does not actually match it",
+  },
+  {
+    name: "a runtime-authority correction citing a sourceSha other than the one actually vendored",
+    file: "contracts/openapi/codestra-platform.openapi.yaml",
+    corrupt: (text) =>
+      text.replace(
+        "authority: ai\n        sourceSha: 7d31ef8de1c15bcc71b61de50917c81e3bcf557d",
+        // A run of hex digits is deliberate: an all-numeric 40-char value
+        // would parse as a YAML number, not a string, and fail this
+        // fixture's own /^[0-9a-f]{40}$/ format check before ever reaching
+        // the "is pinned to" comparison this fixture means to exercise.
+        "authority: ai\n        sourceSha: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      ),
+    expectedSubstring: "is pinned to",
+  },
 ];
 
 const failures = [];

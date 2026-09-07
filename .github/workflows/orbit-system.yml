@@ -1,0 +1,71 @@
+name: Codestra Orbit authority
+
+on:
+  pull_request:
+    paths:
+      - "orbit/**"
+      - "scripts/validate-orbit-system.mjs"
+      - "package.json"
+      - ".github/workflows/orbit-system.yml"
+  push:
+    branches: [main, development, staging, production]
+    paths:
+      - "orbit/**"
+      - "scripts/validate-orbit-system.mjs"
+      - "package.json"
+      - ".github/workflows/orbit-system.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  authority:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out exact revision
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          persist-credentials: false
+      - name: Configure pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1
+        with:
+          version: 10.15.0
+      - name: Configure Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+          cache: pnpm
+          cache-dependency-path: pnpm-lock.yaml
+      - name: Install exact dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate Orbit authority
+        run: pnpm orbit:validate
+      - name: Verify package manifests
+        shell: bash
+        run: |
+          set -euo pipefail
+          for package in orbit/packages/*; do
+            (cd "$package" && npm pack --dry-run --json >/dev/null)
+          done
+      - name: Build exact-head candidate packages
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf orbit/build
+          mkdir -p orbit/build
+          for package in orbit/packages/*; do
+            (cd "$package" && npm pack --pack-destination ../../build >/dev/null)
+          done
+          sha256sum orbit/build/*.tgz | sed 's#orbit/build/##' > orbit/build/SHA256SUMS
+          printf '%s\n' "${{ github.event.pull_request.head.sha || github.sha }}" > orbit/build/SOURCE_COMMIT
+          test "$(find orbit/build -maxdepth 1 -name '*.tgz' | wc -l)" -eq 9
+      - name: Upload exact-head candidate packages
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: codestra-orbit-v2-${{ github.event.pull_request.head.sha || github.sha }}
+          path: orbit/build/
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0

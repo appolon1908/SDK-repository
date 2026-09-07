@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "Codestra Orbit",
+  "version": "2.0.0",
+  "description": "Machine-enforced visual tokens for all Codestra first-party public, authentication, account, and operator shells.",
+  "color": {
+    "canvas": "#000000",
+    "surface": "#101010",
+    "surfaceElevated": "#171717",
+    "surfaceSecondary": "#202020",
+    "textPrimary": "#FFFFFF",
+    "textSecondary": "#D8D8D8",
+    "textMuted": "#9A9A9A",
+    "border": "#353535",
+    "borderStrong": "#5A5A5A",
+    "actionPrimaryBackground": "#FFFFFF",
+    "actionPrimaryText": "#000000",
+    "actionPrimaryHover": "#E7E7E7",
+    "actionPrimaryActive": "#CCCCCC",
+    "focus": "#FFFFFF",
+    "status": {
+      "success": "#36C98F",
+      "warning": "#F4B860",
+      "error": "#FF6469",
+      "danger": "#FF6469",
+      "info": "#79B8FF"
+    }
+  },
+  "typography": {
+    "fontFamily": "Inter, Arial, Helvetica Neue, Helvetica, ui-sans-serif, system-ui, sans-serif",
+    "labelTransform": "uppercase",
+    "labelTrackingEm": 0.12,
+    "brandTrackingEm": 0.29,
+    "bodyLineHeight": 1.55,
+    "headingLineHeight": 1.08
+  },
+  "space": {
+    "0": 0,
+    "1": 4,
+    "2": 8,
+    "3": 12,
+    "4": 16,
+    "5": 20,
+    "6": 24,
+    "8": 32,
+    "10": 40,
+    "12": 48,
+    "16": 64,
+    "18": 72,
+    "20": 80,
+    "24": 96
+  },
+  "size": {
+    "control": 52,
+    "controlCompact": 44,
+    "touchTargetMinimum": 44,
+    "socialIconVisual": 20,
+    "socialIconTarget": 44,
+    "headerDesktop": 76,
+    "headerTablet": 64,
+    "headerMobile": 56,
+    "authColumnMaximum": 480,
+    "contentMain": 1280,
+    "contentWide": 1440,
+    "contentMaximum": 1440,
+    "textColumn": 720
+  },
+  "radius": {
+    "none": 0,
+    "control": 2,
+    "standardMaximum": 6
+  },
+  "border": {
+    "hairline": 1,
+    "focus": 2
+  },
+  "shadow": {
+    "standard": "none"
+  },
+  "motion": {
+    "fastMs": 120,
+    "standardMs": 180,
+    "slowMs": 260,
+    "easing": "cubic-bezier(0.22, 1, 0.36, 1)",
+    "reducedMotion": "required"
+  },
+  "breakpoint": {
+    "minimum": 320,
+    "small": 360,
+    "phone": 390,
+    "tablet": 768,
+    "desktop": 1024,
+    "wide": 1280,
+    "content": 1440,
+    "cinema": 1920
+  },
+  "policy": {
+    "gradients": "prohibited-in-shared-shell",
+    "glow": "prohibited",
+    "glassmorphism": "prohibited",
+    "neon": "prohibited",
+    "largeRoundedCards": "prohibited",
+    "heavyShadow": "prohibited",
+    "statusColors": "status-only-not-branding",
+    "defaultCorporateActionColor": "monochrome-white-not-blue"
+  }
+}

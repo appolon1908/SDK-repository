@@ -1,0 +1,25 @@
+{
+  "name": "@corporate/auth-ui",
+  "version": "2.0.0",
+  "description": "Same-origin Codestra browser-session, safe-return, login, logout, logout-all, and multi-tab session controls.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

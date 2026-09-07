@@ -55,38 +55,57 @@ paths:
     get:
       operationId: listMarketingCampaigns
       summary: List tenant marketing campaigns
+      description: >
+        Corrected against the real Codestra-Marketing- contract
+        (docs/PLATFORM-OPENAPI-ROUTE-CONVERGENCE-V2.md): the real endpoint
+        takes no cursor/limit/status query parameters and returns a bare
+        array, not a paginated envelope.
+      x-codestra-corrects-invented-contract:
+        authority: marketing
+        sourceSha: fe784f1e91bb0f0fd49f2b2f741a4020a337c149
       parameters:
-        - $ref: '#/components/parameters/TenantId'
-        - $ref: '#/components/parameters/CorrelationId'
-        - name: cursor
-          in: query
-          required: false
-          schema: { type: string, minLength: 1, maxLength: 1000 }
-        - name: limit
-          in: query
-          required: false
-          schema: { type: integer, minimum: 1, maximum: 100 }
-        - name: status
-          in: query
-          required: false
-          schema: { $ref: '#/components/schemas/MarketingCampaignStatus' }
+        - name: X-Tenant-ID
+          in: header
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 64 }
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema: { type: string, minLength: 8, maxLength: 128 }
       responses:
         '200':
           description: Current tenant marketing campaigns
           content:
             application/json:
-              schema: { $ref: '#/components/schemas/MarketingCampaignList' }
-        '400': { $ref: '#/components/responses/Error' }
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MarketingCampaign' }
         '401': { $ref: '#/components/responses/Error' }
         '403': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
         '429': { $ref: '#/components/responses/Error' }
     post:
       operationId: createMarketingCampaign
       summary: Create a marketing campaign
+      description: >
+        Corrected against the real Codestra-Marketing- contract; see the
+        GET operation on this path for the correction rationale.
+      x-codestra-corrects-invented-contract:
+        authority: marketing
+        sourceSha: fe784f1e91bb0f0fd49f2b2f741a4020a337c149
       parameters:
-        - $ref: '#/components/parameters/TenantId'
-        - $ref: '#/components/parameters/CorrelationId'
-        - $ref: '#/components/parameters/IdempotencyKey'
+        - name: X-Tenant-ID
+          in: header
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 64 }
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, minLength: 8, maxLength: 200 }
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema: { type: string, minLength: 8, maxLength: 128 }
       requestBody:
         required: true
         content:
@@ -108,13 +127,25 @@ paths:
     get:
       operationId: getMarketingCampaign
       summary: Read one tenant marketing campaign
+      description: >
+        Corrected against the real Codestra-Marketing- contract; see
+        /v1/marketing/campaigns for the correction rationale.
+      x-codestra-corrects-invented-contract:
+        authority: marketing
+        sourceSha: fe784f1e91bb0f0fd49f2b2f741a4020a337c149
       parameters:
-        - $ref: '#/components/parameters/TenantId'
-        - $ref: '#/components/parameters/CorrelationId'
         - name: campaignId
           in: path
           required: true
           schema: { type: string, format: uuid }
+        - name: X-Tenant-ID
+          in: header
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 64 }
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema: { type: string, minLength: 8, maxLength: 128 }
       responses:
         '200':
           description: Current campaign state
@@ -124,45 +155,84 @@ paths:
         '401': { $ref: '#/components/responses/Error' }
         '403': { $ref: '#/components/responses/Error' }
         '404': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
         '429': { $ref: '#/components/responses/Error' }
   /v1/marketing/capabilities:
     get:
       operationId: getMarketingCapabilities
       summary: Read marketing capabilities enabled for the calling tenant
+      description: >
+        Corrected against the real Codestra-Marketing- contract: the real
+        endpoint returns an open-ended object with no fixed channel/limit
+        schema, and does not require X-Tenant-ID.
+      x-codestra-corrects-invented-contract:
+        authority: marketing
+        sourceSha: fe784f1e91bb0f0fd49f2b2f741a4020a337c149
       parameters:
-        - $ref: '#/components/parameters/TenantId'
-        - $ref: '#/components/parameters/CorrelationId'
+        - name: X-Tenant-ID
+          in: header
+          required: false
+          schema: { type: [string, 'null'] }
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema: { type: string, minLength: 8, maxLength: 128 }
       responses:
         '200':
-          description: Enabled marketing channels and limits for the tenant
+          description: Enabled marketing capabilities for the tenant
           content:
             application/json:
               schema: { $ref: '#/components/schemas/MarketingCapabilities' }
         '401': { $ref: '#/components/responses/Error' }
         '403': { $ref: '#/components/responses/Error' }
+        '422': { $ref: '#/components/responses/Error' }
         '429': { $ref: '#/components/responses/Error' }
   /v1/ai/generate:
     post:
       operationId: generateAiContent
-      summary: Generate content from a prompt
+      summary: Submit a governed AI generation request
+      description: >
+        Corrected against the real Codestra-AI Gateway contract
+        (docs/PLATFORM-OPENAPI-ROUTE-CONVERGENCE-V2.md): this operation was
+        originally invented as a synchronous `{prompt} -> 200 {output}` call,
+        which the real backend rejects outright (`additionalProperties:
+        false`, `task`+`input` required). It is actually an async durable
+        request: `202` returns a `request_id` to read back via
+        `GET /v1/ai/requests/{request_id}` on the real service.
+      x-codestra-corrects-invented-contract:
+        authority: ai
+        sourceSha: 7d31ef8de1c15bcc71b61de50917c81e3bcf557d
+      security:
+        - oidc: []
+        - serviceBearer: [ai.request]
       parameters:
-        - $ref: '#/components/parameters/TenantId'
-        - $ref: '#/components/parameters/CorrelationId'
-        - $ref: '#/components/parameters/IdempotencyKey'
+        - name: X-Tenant-ID
+          in: header
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 128 }
+        - name: X-Correlation-ID
+          in: header
+          required: true
+          schema: { type: string, minLength: 8, maxLength: 180 }
+        - name: Idempotency-Key
+          in: header
+          required: true
+          schema: { type: string, minLength: 8, maxLength: 200 }
       requestBody:
         required: true
         content:
           application/json:
             schema: { $ref: '#/components/schemas/GenerateAiRequest' }
       responses:
-        '200':
-          description: Generated content
+        '202':
+          description: Durable AI generation request accepted
           content:
             application/json:
               schema: { $ref: '#/components/schemas/AiGenerationResult' }
         '400': { $ref: '#/components/responses/Error' }
         '401': { $ref: '#/components/responses/Error' }
         '403': { $ref: '#/components/responses/Error' }
+        '409': { $ref: '#/components/responses/Error' }
         '422': { $ref: '#/components/responses/Error' }
         '429': { $ref: '#/components/responses/Error' }
   /v1/crm/leads:
@@ -296,6 +366,15 @@ components:
     oidc:
       type: openIdConnect
       openIdConnectUrl: https://auth.codestra.co/realms/codestra/.well-known/openid-configuration
+    serviceBearer:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://auth.codestra.co/realms/codestra/protocol/openid-connect/token
+          scopes:
+            ai.read: Read AI requests and policy
+            ai.request: Submit governed AI requests
+            ai.cancel: Cancel a governed AI request
   parameters:
     TenantId:
       name: X-Codestra-Tenant-Id
@@ -337,81 +416,60 @@ components:
           items: { type: string, minLength: 1, maxLength: 200 }
         issuedAt: { type: string, format: date-time }
         expiresAt: { type: string, format: date-time }
-    MarketingCampaignStatus:
-      type: string
-      enum: [draft, scheduled, active, paused, completed, cancelled]
-    MarketingChannel:
-      type: string
-      enum: [email, sms, social, push]
-    Budget:
-      type: object
-      additionalProperties: false
-      required: [amount, currency]
-      properties:
-        amount: { type: number, minimum: 0 }
-        currency: { type: string, minLength: 3, maxLength: 3 }
     CreateMarketingCampaignRequest:
       type: object
       additionalProperties: false
-      required: [name, channel]
+      required: [name, objective, daily_budget_minor]
       properties:
-        name: { type: string, minLength: 1, maxLength: 200 }
-        channel: { $ref: '#/components/schemas/MarketingChannel' }
-        audience: { type: object }
-        budget: { $ref: '#/components/schemas/Budget' }
-        scheduledAt: { type: string, format: date-time }
-        metadata: { type: object }
+        name: { type: string, minLength: 1, maxLength: 160 }
+        objective: { type: string, minLength: 1, maxLength: 80 }
+        daily_budget_minor: { type: integer, minimum: 0 }
+        currency: { type: string, minLength: 3, maxLength: 3, default: USD }
+        tenant_id: { type: [string, 'null'], minLength: 1, maxLength: 64 }
     MarketingCampaign:
       type: object
-      additionalProperties: false
-      required: [id, tenantId, name, channel, status, createdAt, updatedAt]
+      required: [id, tenant_id, name, objective, daily_budget_minor, currency, state, resource_version]
       properties:
         id: { type: string, format: uuid }
-        tenantId: { type: string, format: uuid }
-        name: { type: string, minLength: 1, maxLength: 200 }
-        channel: { $ref: '#/components/schemas/MarketingChannel' }
-        status: { $ref: '#/components/schemas/MarketingCampaignStatus' }
-        audience: { type: object }
-        budget: { $ref: '#/components/schemas/Budget' }
-        scheduledAt: { type: string, format: date-time }
-        metadata: { type: object }
-        createdAt: { type: string, format: date-time }
-        updatedAt: { type: string, format: date-time }
-    MarketingCampaignList:
-      type: object
-      additionalProperties: false
-      required: [items]
-      properties:
-        items:
-          type: array
-          items: { $ref: '#/components/schemas/MarketingCampaign' }
-        nextCursor: { type: string, minLength: 1, maxLength: 1000 }
+        tenant_id: { type: string }
+        name: { type: string }
+        objective: { type: string }
+        daily_budget_minor: { type: integer }
+        currency: { type: string }
+        state: { type: string }
+        resource_version: { type: integer }
     MarketingCapabilities:
       type: object
-      additionalProperties: false
-      required: [channels]
-      properties:
-        channels:
-          type: array
-          items: { $ref: '#/components/schemas/MarketingChannel' }
-        maxActiveCampaigns: { type: integer, minimum: 0 }
+      additionalProperties: true
     GenerateAiRequest:
       type: object
       additionalProperties: false
-      required: [prompt]
+      required: [task, input]
       properties:
-        prompt: { type: string, minLength: 1, maxLength: 20000 }
-        model: { type: string, minLength: 1, maxLength: 200 }
-        metadata: { type: object }
+        task: { type: string, enum: [copy, classify, summarize, score, creative_brief] }
+        input: { type: string, minLength: 1, maxLength: 20000 }
+        tenant_id: { type: [string, 'null'], maxLength: 128 }
+        campaign_id: { type: [string, 'null'], maxLength: 128 }
+        data_class: { type: string, enum: [public, internal, confidential] }
+        region: { type: string, minLength: 2, maxLength: 32 }
+        maximum_cost_micros: { type: integer, minimum: 0, maximum: 10000000 }
+        retain_output: { type: boolean }
     AiGenerationResult:
       type: object
-      additionalProperties: false
-      required: [id, output, createdAt]
+      required: [request_id, status, input_tokens, output_tokens, cost_micros, resource_version]
       properties:
-        id: { type: string, format: uuid }
-        output: { type: string }
-        model: { type: string, minLength: 1, maxLength: 200 }
-        createdAt: { type: string, format: date-time }
+        request_id: { type: string, format: uuid }
+        status: { type: string }
+        output: { type: [string, 'null'] }
+        provider: { type: [string, 'null'] }
+        model: { type: [string, 'null'] }
+        input_tokens: { type: integer, minimum: 0 }
+        output_tokens: { type: integer, minimum: 0 }
+        cost_micros: { type: integer, minimum: 0 }
+        middleware_operation_id: { type: [string, 'null'], maxLength: 128 }
+        resource_version: { type: integer, minimum: 1 }
+        created_at: { type: [string, 'null'], format: date-time }
+        updated_at: { type: [string, 'null'], format: date-time }
     CrmLeadStatus:
       type: string
       enum: [new, contacted, qualified, disqualified, converted]

@@ -52,6 +52,18 @@ const definitions = [
     expectedVersion: "3.1.0",
   },
   {
+    kind: "openapi",
+    path: "contracts/vendor/marketing-runtime-current.openapi.json",
+    expectedVersion: "3.1.0",
+    externalEvidence: true,
+  },
+  {
+    kind: "openapi",
+    path: "contracts/vendor/ai-runtime-current.openapi.json",
+    expectedVersion: "3.1.0",
+    externalEvidence: true,
+  },
+  {
     kind: "asyncapi",
     path: "contracts/asyncapi/codestra-events.asyncapi.yaml",
     expectedVersion: "3.0.0",
@@ -112,7 +124,7 @@ try {
   if (!match) {
     failures.push("packages/contracts/src/index.ts: CONTRACT_VERSION was not found");
   } else {
-    for (const definition of definitions) {
+    for (const definition of definitions.filter((entry) => !entry.externalEvidence)) {
       const document = documents.get(definition.path);
       const version = isObject(document?.info) ? document.info.version : undefined;
       if (version !== match[1]) {

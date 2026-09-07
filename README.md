@@ -46,6 +46,24 @@ SDKs and connectors never bypass Codestra Middleware. Middleware remains the onl
 
 Optional runtime integrations are disabled by default and must not activate external delivery or production mutations merely by installing this repository.
 
+## Current enablement state
+
+The reusable SDK layer is enabled for application integration. Enabling the SDK is intentionally separate from enabling a live provider effect.
+
+| Surface | State | Boundary |
+| --- | --- | --- |
+| Unified TypeScript SDK | Enabled | Caller supplies HTTPS API base URL, short-lived token, tenant, correlation, and idempotency context |
+| Landing-page/form/chat/voice intake client | Enabled | Browser sends only to a same-origin BFF; no service credential is shipped to the browser |
+| Intake BFF | Enabled when configured | Requires the `sdk-intake` client secret and an explicit server-side tenant allowlist |
+| MoneyBee Middleware operation readback | Enabled when client is explicitly constructed | Secure URL and token provider are required; `enabled=false` remains the global kill switch |
+| MoneyBee/connector mutations | Disabled by default | `allowed_capabilities` is empty until each capability is explicitly approved |
+| Provider adapters | Disabled by default | Middleware capability, identity, tenant, staging, reconciliation, and activation gates must pass |
+| Optional Svix delivery | Disabled by default | Separate deployment and activation approval required |
+| Optional Camel protocol gateway | Disabled by default | Immutable image and explicit protocol allowlist required |
+| Email, SMS, social, callback, Odoo, and PSTN effects | Disabled by default | Owning runtime must provide exact capability readback and production approval |
+
+This means websites can install and wire the SDK now without turning the SDK repository into a privileged execution path. Runtime capability activation still occurs only in the owning Middleware/provider environment.
+
 ## Unified SDK surface
 
 Product teams should import one stable SDK facade from [packages/codestra_sdk](packages/codestra_sdk). Domain-specific packages such as `@codestra/communications-sdk` and `@codestra/social-sdk` remain reusable implementation packages, but application code should depend on the facade when it needs the complete Codestra platform surface:
@@ -63,7 +81,7 @@ codestra_sdk
 
 ```ts
 codestra.marketing.campaigns.list();
-codestra.ai.generate({ prompt: "Summarize this lead." }, { idempotencyKey });
+codestra.ai.generate({ task: "summarize", input: "Summarize this lead." }, { idempotencyKey });
 codestra.communication.messages.send(message, { idempotencyKey });
 codestra.social.posts.schedule(post, { idempotencyKey });
 ```
@@ -77,6 +95,10 @@ The facade is the programming contract product developers see. Backend implement
 ## Production configuration
 
 Password reset, SMTP, OIDC clients, provider credentials, DNS, Kong, and deployed Middleware settings are intentionally outside this SDK repository. Use [docs/PRODUCTION_CONFIGURATION_CHECKLIST.md](docs/PRODUCTION_CONFIGURATION_CHECKLIST.md) to verify those owners and gates before any production activation.
+
+## Container images
+
+Every deployable service (`services/middleware`, the three `apps/*` dashboards, `services/camel-protocol-gateway`) has a production Dockerfile, and the root [`docker-compose.yml`](docker-compose.yml) unifies them into one local/staging stack (`docker compose up`). CI publishes images to GHCR on every push to `main`/`production`. See [docs/production/DOCKER-DEPLOYMENT.md](docs/production/DOCKER-DEPLOYMENT.md) for the full picture, including why `camel-protocol-gateway` is a deliberate exception.
 
 ## Communications API v1
 

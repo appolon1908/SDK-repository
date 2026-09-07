@@ -1,0 +1,122 @@
+openapi: 3.1.0
+info:
+  title: Codestra Browser Session API
+  version: 2.0.0
+  description: Same-origin browser-session contract. OAuth/OIDC tokens remain server-side and are never returned to browser JavaScript.
+servers:
+  - url: https://{applicationHost}
+    variables:
+      applicationHost:
+        default: codestra.co
+security: []
+paths:
+  /auth/login:
+    get:
+      summary: Begin Authorization Code with PKCE login
+      parameters:
+        - $ref: '#/components/parameters/ReturnTo'
+      responses:
+        '302': { description: Redirect to the approved identity provider }
+        '400': { $ref: '#/components/responses/GenericError' }
+  /auth/signup:
+    get:
+      summary: Begin approved account creation or invitation flow
+      parameters:
+        - $ref: '#/components/parameters/ReturnTo'
+      responses:
+        '302': { description: Redirect to the approved identity provider }
+        '400': { $ref: '#/components/responses/GenericError' }
+  /auth/callback:
+    get:
+      summary: Validate callback state, nonce, issuer, signature, audience, redirect binding, and session binding
+      responses:
+        '302': { description: Establish secure session cookie and redirect to the allowlisted return path }
+        '400': { $ref: '#/components/responses/GenericError' }
+  /auth/session:
+    get:
+      summary: Return the current browser session summary
+      responses:
+        '200':
+          description: Session summary
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Session' }
+        '401': { $ref: '#/components/responses/GenericError' }
+  /auth/refresh:
+    post:
+      summary: Rotate or refresh the server-side session
+      security: [{ SessionCookie: [] }]
+      responses:
+        '200':
+          description: Rotated session summary
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Session' }
+        '401': { $ref: '#/components/responses/GenericError' }
+  /auth/logout:
+    post:
+      summary: Revoke this session and expire its cookie
+      security: [{ SessionCookie: [] }]
+      responses:
+        '204': { description: Signed out }
+        '401': { $ref: '#/components/responses/GenericError' }
+  /auth/logout-all:
+    post:
+      summary: Revoke all sessions for the current account
+      security: [{ SessionCookie: [] }]
+      responses:
+        '204': { description: All sessions revoked }
+        '401': { $ref: '#/components/responses/GenericError' }
+components:
+  parameters:
+    ReturnTo:
+      in: query
+      name: return_to
+      required: false
+      schema: { type: string, maxLength: 2048 }
+      description: Same-origin path or explicitly allowlisted HTTPS origin.
+  securitySchemes:
+    SessionCookie:
+      type: apiKey
+      in: cookie
+      name: __Host-codestra_session
+  schemas:
+    Session:
+      type: object
+      additionalProperties: false
+      required: [authenticated, expiresAt, roles, capabilities]
+      properties:
+        authenticated: { const: true }
+        expiresAt: { type: string, format: date-time }
+        user:
+          type: object
+          additionalProperties: false
+          required: [id, displayName]
+          properties:
+            id: { type: string }
+            displayName: { type: string }
+            email: { type: string, format: email }
+        tenant:
+          type: object
+          additionalProperties: false
+          required: [id]
+          properties:
+            id: { type: string }
+            name: { type: string }
+        roles: { type: array, items: { type: string }, uniqueItems: true }
+        capabilities: { type: array, items: { type: string }, uniqueItems: true }
+  responses:
+    GenericError:
+      description: Account-safe generic error with correlation ID
+      headers:
+        X-Correlation-ID: { schema: { type: string } }
+      content:
+        application/problem+json:
+          schema:
+            type: object
+            required: [type, title, status, correlationId]
+            properties:
+              type: { type: string, format: uri-reference }
+              title: { type: string }
+              status: { type: integer }
+              correlationId: { type: string }

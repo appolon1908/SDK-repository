@@ -1,0 +1,54 @@
+:root, [data-orbit-theme="dark"] {
+  --orbit-canvas: #000000;
+  --orbit-surface: #101010;
+  --orbit-surface-elevated: #171717;
+  --orbit-surface-secondary: #202020;
+  --orbit-text-primary: #FFFFFF;
+  --orbit-text-secondary: #D8D8D8;
+  --orbit-text-muted: #9A9A9A;
+  --orbit-border: #353535;
+  --orbit-border-strong: #5A5A5A;
+  --orbit-action-primary-bg: #FFFFFF;
+  --orbit-action-primary-text: #000000;
+  --orbit-action-primary-hover: #E7E7E7;
+  --orbit-action-primary-active: #CCCCCC;
+  --orbit-focus: #FFFFFF;
+  --orbit-success: #36C98F;
+  --orbit-warning: #F4B860;
+  --orbit-error: #FF6469;
+  --orbit-danger: #FF6469;
+  --orbit-info: #79B8FF;
+  --orbit-font-family: Inter, Arial, Helvetica Neue, Helvetica, ui-sans-serif, system-ui, sans-serif;
+  --orbit-control-height: 52px;
+  --orbit-control-compact-height: 44px;
+  --orbit-target-min: 44px;
+  --orbit-social-icon-size: 20px;
+  --orbit-social-target-size: 44px;
+  --orbit-header-height: 76px;
+  --orbit-auth-max: 480px;
+  --orbit-content-main: 1280px;
+  --orbit-content-wide: 1440px;
+  --orbit-content-max: 1440px;
+  --orbit-text-column-max: 720px;
+  --orbit-radius-control: 2px;
+  --orbit-radius-max: 6px;
+  --orbit-motion-fast: 120ms;
+  --orbit-motion-standard: 180ms;
+  --orbit-motion-slow: 260ms;
+  --orbit-easing: cubic-bezier(0.22, 1, 0.36, 1);
+  color-scheme: dark;
+}
+
+@media (max-width: 1023px) {
+  :root, [data-orbit-theme="dark"] { --orbit-header-height: 64px; }
+}
+@media (max-width: 767px) {
+  :root, [data-orbit-theme="dark"] { --orbit-header-height: 56px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root, [data-orbit-theme="dark"] {
+    --orbit-motion-fast: 1ms;
+    --orbit-motion-standard: 1ms;
+    --orbit-motion-slow: 1ms;
+  }
+}

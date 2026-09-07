@@ -1,0 +1,109 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.codestra.co/orbit/v2/footer-social.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "brand",
+    "revision",
+    "expectedVersion",
+    "attribution",
+    "links",
+    "social",
+    "published"
+  ],
+  "properties": {
+    "brand": {
+      "type": "string"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "expectedVersion": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "attribution": {
+      "const": "Powered by Codestra.co"
+    },
+    "published": {
+      "type": "boolean"
+    },
+    "links": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "labelKey",
+          "href"
+        ],
+        "properties": {
+          "labelKey": {
+            "type": "string"
+          },
+          "href": {
+            "type": "string",
+            "format": "uri"
+          }
+        }
+      }
+    },
+    "social": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "network",
+          "url",
+          "enabled",
+          "validated"
+        ],
+        "properties": {
+          "network": {
+            "enum": [
+              "linkedin",
+              "facebook",
+              "instagram",
+              "x",
+              "youtube",
+              "github",
+              "tiktok",
+              "threads"
+            ]
+          },
+          "url": {
+            "type": "string",
+            "format": "uri"
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "validated": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "audit": {
+      "type": "object",
+      "required": [
+        "actor",
+        "reason",
+        "correlationId"
+      ],
+      "properties": {
+        "actor": {
+          "type": "string"
+        },
+        "reason": {
+          "type": "string"
+        },
+        "correlationId": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}

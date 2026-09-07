@@ -1,0 +1,25 @@
+{
+  "name": "@corporate/eslint-config",
+  "version": "2.0.0",
+  "description": "Merge-blocking Codestra Orbit browser security and visual policy rules.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}
