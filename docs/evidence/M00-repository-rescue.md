@@ -9,7 +9,7 @@ FILES_CHANGED=CODEX_MASTER_MISSION.md; .github/CODEOWNERS; .github/pull_request_
 CONTRACTS_CHANGED=NO
 PUBLIC_BEHAVIOR_CHANGED=NO
 SECURITY_BOUNDARY_CHANGED=YES: immutable CI dependencies, read-only PR workflows, exact-head aggregate gate, and protected integration governance
-TESTS_ADDED=Workflow policy now rejects mutable third-party action references, PR write permissions, source pushes, and publication commands
+TESTS_ADDED=Disposable negative workflow fixtures prove rejection of mutable third-party actions, PR job write permissions, source pushes, and publication commands
 LOCAL_COMMANDS=corepack enable; pnpm install --frozen-lockfile; pnpm workflows:validate; pnpm contracts:validate; pnpm contracts:validate:negative; pnpm build; pnpm typecheck; pnpm test:coverage; pnpm --filter @codestra/social-sdk test:pact; pnpm pacts:validate; scripts/generate-sdks.sh; mvn -f services/camel-protocol-gateway/pom.xml verify; git diff --check; git status --short
 LOCAL_RESULTS=Pre-change and post-change frozen install passed; workflow policy passed for 6 workflows; semantic and negative contract validation passed; 8 workspace builds and typechecks passed; 6 test files/20 tests and the social Pact passed; Pact validation passed; SDK generation passed; git diff check passed. Local Camel verification is unavailable because mvn is not installed; hosted Camel workflow 34126397703 passed. The first aggregate run exposed an unignored Maven target directory after a successful Maven build; .gitignore now excludes standard Maven target outputs and the exact-head aggregate gate must rerun.
 WORKFLOW_RUNS=PR #110: compatibility 34126397596 PASS; workspace 34126397748 PASS; Camel 34126397703 PASS; contracts 34126397874 PASS; SDK generation 34126397857 PASS; aggregate 34126397831 FAIL after Maven BUILD SUCCESS because generated build output made the checkout non-clean; correction pending exact-head rerun
@@ -18,3 +18,19 @@ EXTERNAL_DEPENDENCIES=Exact-head aggregate rerun; human review; release environm
 KNOWN_LIMITATIONS=M00 does not certify Middleware, Kong/identity, product-local restricted gateways, providers, staging, or system production readiness. The review baseline predates substantial current main history, which is preserved and not imported into this historical integration line.
 ROLLBACK=Close the M00 PR without merge; archive tags preserve both historical heads. Do not rewrite or delete main, integration/v0.1, protected branches, or archive tags.
 NEXT_MILESTONE=M01
+
+## Workflow policy review repair — 2026-09-07
+
+PR #111's initial validator accepted PR job `permissions: write-all` and
+job-level reusable workflow references at mutable branches or tags. The
+validator now rejects both forms. Full commit-pinned reusable workflows and
+repository-local reusable workflows remain accepted with read-only permissions.
+
+The new scalar-permission regression fails against the previous implementation.
+All nine positive/negative policy fixtures pass after the repair, and the six
+current workflows validate. Frozen dependencies were installed with the declared
+pnpm 10.15.0. Hosted exact-head required gates and an independent review remain
+required before the repaired PR can merge into `integration/v0.1`.
+
+This completes the reported policy code defects; it does not certify runtime
+integrations or authorize package publication. M01 remains the next milestone.

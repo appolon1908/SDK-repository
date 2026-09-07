@@ -19,6 +19,7 @@
     "ci": "pnpm contracts:validate && pnpm contracts:validate:negative && pnpm build && pnpm typecheck && pnpm test:coverage",
     "contracts:drift": "node scripts/check-contract-drift.mjs",
     "workflows:validate": "node scripts/validate-workflow-policy.mjs",
+    "workflows:validate:negative": "node scripts/test-workflow-policy.mjs",
     "pacts:validate": "node scripts/validate-pacts.mjs",
     "contracts:n8n:generate": "node scripts/sync-n8n-event-schemas.mjs --write",
     "test:redis": "vitest run --config vitest.redis.config.mjs"
