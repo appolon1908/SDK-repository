@@ -27,7 +27,28 @@ env:
   REGISTRY: ghcr.io
 
 jobs:
+  # Runs the same check as .github/workflows/calling-contract-pin.yml, in
+  # this workflow, so build-and-push can `needs:` it directly -- a job in
+  # one workflow file cannot depend on a job in another, so gating on the
+  # separate workflow's push-triggered run (which only races this one) does
+  # not actually stop a bad lock from being published.
+  verify-calling-contract-pin:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout exact revision
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 1
+          persist-credentials: false
+      - name: Validate calling-contract lock before publishing
+        run: python3 scripts/validate_calling_contract_pin.py
+
   build-and-push:
+    needs: verify-calling-contract-pin
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
@@ -84,6 +105,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=${{ matrix.service.name }}
 
   build-and-push-camel-gateway:
+    needs: verify-calling-contract-pin
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     permissions:
