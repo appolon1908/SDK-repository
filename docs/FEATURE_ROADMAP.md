@@ -19,18 +19,21 @@ concrete gap it closes, not just a general direction.
   past the commit this repo has pinned. A scheduled check that compares the pinned
   `source_sha` against the authority repo's current head and opens an issue or PR when they
   diverge would surface this instead of relying on someone remembering to look.
-- **Extend `validate-workflow-policy.mjs`'s local-dependency recursion to reusable workflow
-  files, not just composite actions.** The validator now recurses into a local composite
-  action's `action.yml` to catch mutable nested dependencies (closed this session), but a job
-  that does `uses: ./.github/workflows/build.yml` is still exempted outright — that file's own
-  steps are never inspected for the same class of issue.
+- **Port `validate-workflow-policy.mjs`'s composite-action recursion from `integration/v0.1` to
+  `main`.** The version on `integration/v0.1` recurses into a local composite action's
+  `action.yml` (`uses: ./.github/actions/...`) to catch mutable nested dependencies, closed
+  there this session — `main` still carries an earlier copy of this validator without that
+  check. (A local *reusable workflow*, `uses: ./.github/workflows/build.yml`, needs no separate
+  handling: the validator already reads every YAML file directly under `.github/workflows`, so
+  that file gets validated independently regardless of whether anything else references it.)
 
 ## Supply chain / CI hardening
 
-- **SBOM and provenance attestation on published Docker images.** `docker-publish.yml` builds
-  and pushes images to GHCR with no SBOM generation and no build provenance attestation (e.g.
-  `actions/attest-build-provenance`, `syft`/`cosign`). Anyone consuming these images today has
-  no verifiable record of what went into them.
+- **SBOM generation on published Docker images.** `docker-publish.yml` uses Buildx to push to
+  GHCR, which already attaches a minimal SLSA provenance attestation by default — but there's
+  still no SBOM. Adding one (e.g. `docker/build-push-action`'s `sbom: true` input, or a
+  dedicated `syft` step) would give consumers a verifiable record of what's actually in each
+  image, which provenance alone doesn't provide.
 - **Branch-protection parity check across `development`/`staging`/`main`/`production`.** This
   session repeatedly hit required-status-check lists that had drifted out of sync across the
   four promotion branches (a check present on one branch's protection rules but not another's,
@@ -45,9 +48,12 @@ concrete gap it closes, not just a general direction.
 
 ## SDK / developer experience
 
-- **Rate-limiting and backoff helpers in `@codestra/connector-kit`.** Every provider adapter
-  currently has to implement its own retry/backoff policy against rate-limited upstream APIs;
-  a shared, tested helper would remove that duplication as more adapters are added.
+- **A real retry/backoff policy for the shared `RestrictedGatewayAdapter` transport.** All five
+  checked-in provider adapters (`vicidial`, `klyrow`, `postiz`, `telnexa`, `odoo`) inherit this
+  one base class rather than implementing their own retry logic, and it currently only
+  classifies which HTTP statuses are `retryable` — it doesn't retry or back off. Adding that
+  policy at the shared transport, where it actually lives, would benefit every adapter at once
+  without asking each one to implement it.
 - **A stitched-together docs site instead of scattered top-level `docs/*.md` files.** There are
   over a dozen standalone markdown files in `docs/` (architecture, production readiness,
   contract boundaries, deployment) with no index or cross-linking beyond what individual files
