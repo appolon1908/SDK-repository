@@ -15,6 +15,7 @@ concurrency:
 env:
   EXPECTED_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
   OPENAPI_GENERATOR_IMAGE: openapitools/openapi-generator-cli@sha256:509f01c3c7eee9d1ad286506a7b6aa4624a95b410be9a238a306d209e900621f
+  SDK_REDIS_TEST_IMAGE: redis@sha256:298e5b3bc566bade82f46ad5511777a4a07a294097ce16ada2f6a42be5239df5
   REDOCLY_TELEMETRY: off
   REDOCLY_SUPPRESS_UPDATE_NOTICE: "true"
 
@@ -48,7 +49,7 @@ jobs:
           distribution: temurin
           java-version: "21"
           cache: maven
-      - name: Run complete M00 evidence gate
+      - name: Run source and signed inbound evidence gates
         run: |
           corepack enable
           pnpm install --frozen-lockfile
@@ -58,6 +59,7 @@ jobs:
           pnpm build
           pnpm typecheck
           pnpm test:coverage
+          pnpm test:redis
           pnpm --filter @codestra/social-sdk test:pact
           pnpm pacts:validate
           scripts/generate-sdks.sh
