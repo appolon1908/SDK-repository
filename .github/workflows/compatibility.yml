@@ -28,6 +28,11 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
           fetch-depth: 0
           persist-credentials: false
+      - name: Validate calling contract lock
+        run: |
+          set -Eeuo pipefail
+          python3 scripts/validate_calling_contract_pin.py
+          python3 scripts/validate_calling_contract_pin.py --self-test
       - name: Set up pnpm
         uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86 # v6.0.10
         with:

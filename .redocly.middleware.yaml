@@ -1,10 +1,17 @@
 extends:
   - recommended
 
-# The generated Middleware contract deliberately leaves its deployment server
-# out and marks public liveness operations with an empty security array. This
-# evidence file must remain byte-equivalent to its source commit, so those two
-# deployment-policy rules are disabled only for this separate lint invocation.
+# Evidence files under this config are verbatim vendored snapshots of a
+# third-party contract, pinned byte-for-byte to a specific upstream commit
+# (see each file's *.source.json). This repo cannot edit them to fit its own
+# house style without breaking that pin, so style/completeness rules that
+# only make sense for contracts we author ourselves are disabled here:
+# the generated Middleware contract deliberately leaves its deployment
+# server out and marks public liveness operations with an empty security
+# array, and the vendored Codestra-AI contract documents operations by
+# operationId alone, without a separate summary or explicit 4xx responses.
 rules:
   no-empty-servers: off
   security-defined: off
+  operation-summary: off
+  operation-4xx-response: off

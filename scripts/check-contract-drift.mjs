@@ -41,6 +41,32 @@ const TRANSPORT_INJECTED_HEADERS = new Map([
   ["X-Tenant-ID", '"x-tenant-id": this.tenantId'],
 ]);
 
+/**
+ * A contract this repo invented before a canonical upstream contract
+ * existed can turn out wrong once the real one is available (see
+ * codestra-platform.openapi.yaml's history: /v1/ai/generate and
+ * /v1/marketing/campaigns were both guessed, and the guesses didn't
+ * match). Correcting that guess is not a breaking change to any real
+ * caller -- there was no real caller a wrong invented shape could ever
+ * have satisfied -- but the diff below can't tell "correction toward
+ * ground truth" apart from "arbitrary narrowing" on its own. These are
+ * the vendored, pinned snapshots of the real upstream contracts that
+ * `isProvenAgainstRuntimeAuthority` cross-checks a correction against
+ * before allowing it through; see scripts/import-marketing-runtime-contract.mjs
+ * and scripts/import-ai-runtime-contract.mjs for how they're produced.
+ */
+const RUNTIME_AUTHORITIES = new Map([
+  ["marketing", {
+    openapiPath: "contracts/vendor/marketing-runtime-current.openapi.json",
+    sourcePath: "contracts/vendor/marketing-runtime-current.source.json",
+  }],
+  ["ai", {
+    openapiPath: "contracts/vendor/ai-runtime-current.openapi.json",
+    sourcePath: "contracts/vendor/ai-runtime-current.source.json",
+  }],
+]);
+const runtimeAuthorityBundleCache = new Map();
+
 const workDir = await mkdtemp(join(tmpdir(), "codestra-contract-drift-"));
 const failures = [];
 
@@ -130,6 +156,8 @@ function diffOpenApi(file, base, current, output) {
       diffOperation(
         file,
         label,
+        path,
+        method,
         baseOperation,
         currentOperation,
         effectiveParameters(basePathItem, baseOperation),
@@ -158,7 +186,9 @@ function effectiveParameters(pathItem, operation) {
   return [...merged.values()];
 }
 
-function diffOperation(file, label, base, current, baseParameters, currentParameters, documentBaseSecurity, documentCurrentSecurity, output) {
+function diffOperation(file, label, path, method, base, current, baseParameters, currentParameters, documentBaseSecurity, documentCurrentSecurity, output) {
+  if (verifyRuntimeAuthorityCorrection(file, method, path, current)) return;
+
   if (base.operationId && current.operationId && base.operationId !== current.operationId) {
     output.push(`[${file}] operationId changed for ${label}: ${base.operationId} -> ${current.operationId}`);
   }
@@ -294,6 +324,171 @@ function isProvenTransportInjectedHeader(parameter) {
     throw new Error(`Contract marks ${parameter.name} as transport-injected, but the SDK transport invariant is absent`);
   }
   return true;
+}
+
+/**
+ * An operation carrying `x-codestra-corrects-invented-contract: { authority,
+ * sourceSha }` claims its current shape was corrected to match a real,
+ * vendored upstream contract rather than invented. This is verified, not
+ * trusted: the cited authority must be one of RUNTIME_AUTHORITIES, its
+ * sourceSha must match that authority's own pin exactly (so a stale or
+ * wrong citation is caught, not silently accepted), and the current
+ * operation's shape must structurally match what that authority actually
+ * declares. Any mismatch throws rather than falling through to the normal
+ * diff, so a bad annotation fails loudly instead of masking a real
+ * breaking change as a "verified" one. Returns false (proceed with the
+ * normal diff) only when there is no such annotation at all.
+ */
+function verifyRuntimeAuthorityCorrection(file, method, path, current) {
+  const annotation = current["x-codestra-corrects-invented-contract"];
+  if (annotation === undefined) return false;
+  const label = `${method.toUpperCase()} ${path}`;
+  const authorityName = annotation?.authority;
+  const sourceSha = annotation?.sourceSha;
+  if (!RUNTIME_AUTHORITIES.has(authorityName)) {
+    throw new Error(`[${file}] ${label} cites unknown runtime authority ${JSON.stringify(authorityName)}`);
+  }
+  if (!/^[0-9a-f]{40}$/u.test(sourceSha ?? "")) {
+    throw new Error(`[${file}] ${label} cites an invalid runtime authority sourceSha`);
+  }
+  const { pin, document: authorityDocument } = loadRuntimeAuthorityBundle(authorityName);
+  if (pin.source_sha !== sourceSha) {
+    throw new Error(
+      `[${file}] ${label} cites runtime authority sha ${sourceSha}, but the vendored "${authorityName}" snapshot is pinned to ${pin.source_sha}`,
+    );
+  }
+  const normalizedPath = normalizeAuthorityPath(path);
+  const authorityPathItem = Object.entries(authorityDocument.paths ?? {}).find(
+    ([authorityPath]) => normalizeAuthorityPath(authorityPath) === normalizedPath,
+  )?.[1];
+  const authorityOperation = authorityPathItem?.[method];
+  if (!authorityOperation) {
+    throw new Error(`[${file}] ${label} cites runtime authority "${authorityName}", which has no matching operation`);
+  }
+  const mismatches = [];
+  compareOperationAgainstAuthority(current, authorityOperation, mismatches);
+  if (mismatches.length > 0) {
+    throw new Error(
+      `[${file}] ${label} claims to correct against runtime authority "${authorityName}" (${sourceSha}), ` +
+        `but does not actually match it:\n${mismatches.map((mismatch) => `  - ${mismatch}`).join("\n")}`,
+    );
+  }
+  return true;
+}
+
+function loadRuntimeAuthorityBundle(authorityName) {
+  if (runtimeAuthorityBundleCache.has(authorityName)) return runtimeAuthorityBundleCache.get(authorityName);
+  const config = RUNTIME_AUTHORITIES.get(authorityName);
+  const pin = JSON.parse(readFileSyncOrThrow(config.sourcePath));
+  const snapshot = JSON.parse(readFileSyncOrThrow(config.openapiPath));
+  const embedded = snapshot["x-codestra-source-authority"];
+  if (
+    embedded?.repository !== pin.repository ||
+    embedded?.source_sha !== pin.source_sha ||
+    embedded?.source_sha256 !== pin.source_sha256
+  ) {
+    throw new Error(
+      `Vendored "${authorityName}" runtime snapshot (${config.openapiPath}) does not match its own pin ` +
+        `(${config.sourcePath}); re-run scripts/import-${authorityName}-runtime-contract.mjs`,
+    );
+  }
+  const bundled = bundle(config.openapiPath, join(workDir, `authority-${authorityName}.json`));
+  if (!bundled) {
+    throw new Error(`Vendored "${authorityName}" runtime snapshot at ${config.openapiPath} could not be bundled`);
+  }
+  const result = { pin, document: bundled };
+  runtimeAuthorityBundleCache.set(authorityName, result);
+  return result;
+}
+
+function normalizeAuthorityPath(path) {
+  return path.replace(/\{[^}]+\}/gu, "{}");
+}
+
+/**
+ * Deliberately shallower than compareSchema: this only needs to prove the
+ * corrected operation matches ground truth, not perform general breaking-
+ * change detection. Required-property sets must match exactly in both
+ * directions (the correction should claim neither more nor less than the
+ * authority actually guarantees/requires); a property current declares
+ * must exist on the authority (current cannot invent fields), but the
+ * authority may have optional fields current doesn't bother to model.
+ */
+function compareOperationAgainstAuthority(current, authority, output) {
+  const currentSuccess = new Set(Object.keys(current.responses ?? {}).filter((status) => /^2/u.test(status)));
+  const authoritySuccess = new Set(Object.keys(authority.responses ?? {}).filter((status) => /^2/u.test(status)));
+  for (const status of authoritySuccess) {
+    if (!currentSuccess.has(status)) output.push(`missing success response ${status} (the runtime authority uses it)`);
+  }
+  for (const status of currentSuccess) {
+    if (!authoritySuccess.has(status)) output.push(`declares success response ${status}, but the runtime authority does not use it`);
+  }
+  for (const status of [...currentSuccess].filter((entry) => authoritySuccess.has(entry))) {
+    compareSchemaAgainstAuthority(
+      `responses.${status}`,
+      current.responses[status]?.content?.["application/json"]?.schema,
+      authority.responses[status]?.content?.["application/json"]?.schema,
+      output,
+    );
+  }
+
+  const currentBodySchema = current.requestBody?.content?.["application/json"]?.schema;
+  const authorityBodySchema = authority.requestBody?.content?.["application/json"]?.schema;
+  if (Boolean(currentBodySchema) !== Boolean(authorityBodySchema)) {
+    output.push("request body presence differs from the runtime authority");
+  } else if (currentBodySchema && authorityBodySchema) {
+    compareSchemaAgainstAuthority("requestBody", currentBodySchema, authorityBodySchema, output);
+  }
+
+  // Path parameter names are local identifiers, not wire values -- the URL
+  // template's {} position is what has to line up, not the literal name
+  // (our "campaignId" vs. the authority's "campaign_id" is not a mismatch).
+  const parameterKey = (parameter) => (parameter.in === "path" ? "path:{}" : `${parameter.in}:${parameter.name.toLowerCase()}`);
+  const currentParams = new Map((current.parameters ?? []).map((parameter) => [parameterKey(parameter), parameter]));
+  const authorityParams = new Map((authority.parameters ?? []).map((parameter) => [parameterKey(parameter), parameter]));
+  const requiredCurrent = new Set([...currentParams.entries()].filter(([, parameter]) => parameter.required).map(([key]) => key));
+  const requiredAuthority = new Set([...authorityParams.entries()].filter(([, parameter]) => parameter.required).map(([key]) => key));
+  for (const key of requiredAuthority) {
+    if (!requiredCurrent.has(key)) output.push(`does not require parameter ${key}, but the runtime authority does`);
+  }
+  for (const key of requiredCurrent) {
+    if (!requiredAuthority.has(key)) output.push(`requires parameter ${key}, but the runtime authority does not`);
+  }
+}
+
+function compareSchemaAgainstAuthority(path, current, authority, output, depth = 0) {
+  if (depth > 16) {
+    output.push(`${path} exceeds the authority comparison depth`);
+    return;
+  }
+  if (!current || !authority) {
+    if (Boolean(current) !== Boolean(authority)) output.push(`${path} presence differs from the runtime authority`);
+    return;
+  }
+  const currentFlat = flattenComposedSchema(current);
+  const authorityFlat = flattenComposedSchema(authority);
+  const currentType = normalizeTypeForAuthority(current, currentFlat);
+  const authorityType = normalizeTypeForAuthority(authority, authorityFlat);
+  if (currentType && authorityType && currentType !== authorityType) {
+    output.push(`${path} type is ${currentType}, but the runtime authority declares ${authorityType}`);
+  }
+  for (const property of authorityFlat.required) {
+    if (!currentFlat.required.has(property)) output.push(`${path} does not require ${property}, but the runtime authority does`);
+  }
+  for (const property of currentFlat.required) {
+    if (!authorityFlat.required.has(property)) output.push(`${path} requires ${property}, but the runtime authority does not`);
+  }
+  for (const property of Object.keys(currentFlat.properties)) {
+    if (!(property in authorityFlat.properties)) output.push(`${path}.${property} does not exist on the runtime authority`);
+  }
+  if (current.items && authority.items) {
+    compareSchemaAgainstAuthority(`${path}[]`, current.items, authority.items, output, depth + 1);
+  }
+}
+
+function normalizeTypeForAuthority(schema, flat) {
+  const type = schema.type ?? (Object.keys(flat.properties).length > 0 ? "object" : undefined);
+  return Array.isArray(type) ? [...type].sort().join(",") : type;
 }
 
 function diffAsyncApi(file, base, current, output) {

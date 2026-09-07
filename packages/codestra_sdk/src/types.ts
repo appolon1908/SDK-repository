@@ -47,21 +47,24 @@ export interface OperationMutationInput {
   reason: string;
 }
 
+export type GenerateAiTask = "copy" | "classify" | "summarize" | "score" | "creative_brief";
+export type GenerateAiDataClass = "public" | "internal" | "confidential";
+
 export interface GenerateAiInput {
-  prompt: string;
-  model?: string;
-  metadata?: JsonObject;
+  task: GenerateAiTask;
+  input: string;
+  tenant_id?: string | null;
+  campaign_id?: string | null;
+  data_class?: GenerateAiDataClass;
+  region?: string;
+  maximum_cost_micros?: number;
+  retain_output?: boolean;
 }
 
-export interface TriggerWorkflowInput {
-  workflow: string;
+export interface TriggerAutomationCommandInput {
+  workflowKey: string;
+  workflowFamily?: string;
+  workflowVersion?: string;
   payload?: JsonObject;
-}
-
-export interface MarketingCampaignListOptions {
-  cursor?: string;
-  limit?: number;
-  status?: string;
-  signal?: AbortSignal;
-  correlationId?: string;
+  commandId?: string;
 }

@@ -58,7 +58,7 @@ older wrappers remain present so this change does not silently break consumers:
 - `/v1/marketing/campaigns*`
 - `/v1/ai/generate`
 - `/v1/crm/leads*` (`deprecated: true`; see below)
-- `/v1/workflow/runs*`
+- `/v1/workflow/runs*` (`deprecated: true`; see below)
 
 `/v1/crm/leads*` was a direct CRM read edge that
 `docs/PLATFORM-OPENAPI-ROUTE-CONVERGENCE-V2.md` flags as a prohibited
@@ -77,6 +77,19 @@ boundary places OIDC/session infrastructure outside its ownership entirely
 (there is no "same-origin BFF package" here to publish a real contract
 for). The unified SDK no longer exposes it. Same sunset treatment as
 `/v1/crm/leads*` above -- deprecated in the contract, not yet removable.
+
+`/v1/workflow/runs*` was superseded orchestration vocabulary
+(`docs/PLATFORM-OPENAPI-ROUTE-CONVERGENCE-V2.md`). The real Middleware
+successor, `/v2/automation/*`, turned out to be n8n-orchestrator-internal
+machinery on inspection (every authorized client in its operation policy
+is an `n8n-*` machine client; tenant/actor context is explicitly derived
+server-side, never from a caller) -- not a product-facing route, so this
+SDK does not target it. Workflow triggering instead goes through the real,
+already-implemented canonical command plane: `codestra.automation.commands.trigger()`
+submits `POST /v1/commands` with `command_type: "automation.workflow.trigger"`,
+`target: "n8n"`, read back via the existing `GET /v1/operations/{command_id}`
+-- the same pattern every other domain command already uses. Same sunset
+treatment as the routes above.
 
 These compatibility routes are absent from Middleware SHA `9cd3fd3e…`; they
 must not be used as evidence for staging or production certification and need

@@ -1,0 +1,29 @@
+{
+  "name": "@corporate/ui",
+  "version": "2.0.0",
+  "description": "Framework-neutral accessible Codestra Orbit header, footer, auth shell, and page-shell primitives.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": [
+    "./css/orbit-ui.css"
+  ],
+  "files": [
+    "src",
+    "css",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    },
+    "./css": "./css/orbit-ui.css"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

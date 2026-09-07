@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "2.0.0",
+  "repository": "appolon1908-hue/SDK-repository",
+  "classification": "source-authority",
+  "targetBranch": "codex/codestra-orbit-v2-sdk-repository",
+  "adoptionMode": "package-authority",
+  "domain": null,
+  "domainStatus": "not-applicable",
+  "requirements": {
+    "sharedPackages": true,
+    "domainRegistry": true,
+    "authContract": true,
+    "routeSchema": true,
+    "footerSchema": true,
+    "consumerGate": true
+  },
+  "status": "candidate",
+  "blockers": [
+    "Package tarballs require protected merge and downstream pinning before suite certification."
+  ]
+}

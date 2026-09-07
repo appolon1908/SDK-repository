@@ -14,7 +14,7 @@
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <maven.compiler.release>21</maven.compiler.release>
     <camel.version>4.22.0</camel.version>
-    <maven.shade.version>3.6.1</maven.shade.version>
+    <maven.shade.version>3.6.2</maven.shade.version>
     <maven.surefire.version>3.5.2</maven.surefire.version>
   </properties>
 

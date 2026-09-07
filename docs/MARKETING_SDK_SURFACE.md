@@ -8,7 +8,7 @@ The existing Codestra SDK remains the single client SDK. Add typed modules witho
 - codestra.ai
 - codestra.communication
 - codestra.social
-- codestra.workflows
+- codestra.automation
 
 ## Initial methods
 - marketing.campaigns.create/get/list/request_approval

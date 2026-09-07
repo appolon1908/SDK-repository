@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.codestra.co/orbit/v2/page-template-manifest.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "templates"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "2.0.0"
+    },
+    "templates": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "shell",
+          "allowedSections",
+          "requiredStates"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "shell": {
+            "enum": [
+              "public",
+              "auth",
+              "account",
+              "operator",
+              "legal",
+              "error"
+            ]
+          },
+          "allowedSections": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "hero",
+                "media-story",
+                "feature-split",
+                "feature-grid",
+                "cta",
+                "faq",
+                "pricing",
+                "contact",
+                "legal",
+                "error",
+                "table",
+                "form",
+                "tabs",
+                "filters",
+                "timeline"
+              ]
+            }
+          },
+          "requiredStates": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

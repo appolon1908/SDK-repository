@@ -10,7 +10,7 @@ The Codestra SDK is the stable developer-facing client layer for Codestra platfo
 - codestra.social
 - codestra.ai
 - codestra.crm
-- codestra.workflows
+- codestra.automation
 
 ## Core Rules
 1. The SDK contains clients and shared types, not business authority.
@@ -30,7 +30,7 @@ social.posts.create()
 social.posts.schedule()
 ai.generate()
 ai.classify()
-workflows.trigger()
+automation.commands.trigger()
 
 ## Compatibility Policy
 Breaking API changes require a new version or documented migration path. SDK CI must validate generated clients/types, authentication behavior, error normalization, retry safety and contract drift.
@@ -42,5 +42,5 @@ Breaking API changes require a new version or documented migration path. SDK CI 
 4. Communication module
 5. Social module
 6. CRM integration module
-7. Workflow module
+7. Automation module
 8. Contract tests against staging

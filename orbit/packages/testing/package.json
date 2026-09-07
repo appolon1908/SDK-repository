@@ -1,0 +1,25 @@
+{
+  "name": "@corporate/testing",
+  "version": "2.0.0",
+  "description": "Codestra Orbit route, source, DOM, accessibility-baseline, and viewport test helpers.",
+  "license": "MIT",
+  "type": "module",
+  "sideEffects": false,
+  "files": [
+    "src",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/index.js"
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

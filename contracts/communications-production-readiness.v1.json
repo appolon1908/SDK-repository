@@ -17,7 +17,7 @@
     "ai",
     "communication",
     "social",
-    "workflow",
+    "automation",
     "events",
     "common"
   ],
@@ -28,6 +28,7 @@
     "/dependencies",
     "/capabilities",
     "/v1/operations",
+    "/v1/commands",
     "/v1/marketing/commands",
     "/v1/ai/commands",
     "/v1/crm/commands",
