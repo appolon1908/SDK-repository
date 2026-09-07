@@ -5,6 +5,60 @@ const directory = process.env.WORKFLOW_DIRECTORY ?? ".github/workflows";
 const files = (await readdir(directory)).filter((name) => /\.ya?ml$/u.test(name));
 const failures = [];
 
+const SHA_PIN = /@[0-9a-f]{40}$/u;
+const IMMUTABLE_DIGEST = /@sha256:[0-9a-f]{64}$/u;
+const MUTATION_PATTERN =
+  /(^|[;&|\n]\s*)(git(?:\s+-{1,2}[\w-]+(?:[= ]\S+)?)*\s+push|gh\s+(pr|release)\s+|npm\s+publish|pnpm\s+publish)(\s|$)/u;
+
+function isImmutableContainerImage(image) {
+  return typeof image === "string" && IMMUTABLE_DIGEST.test(image);
+}
+
+function containerImageOf(container) {
+  if (typeof container === "string") return container;
+  if (container && typeof container === "object") return container.image;
+  return undefined;
+}
+
+async function validateLocalAction(actionPath, path, jobName, isPullRequest, visited = new Set()) {
+  if (visited.has(actionPath)) return;
+  visited.add(actionPath);
+
+  let manifestPath = `${actionPath}/action.yml`;
+  let manifestText;
+  try {
+    manifestText = await readFile(manifestPath, "utf8");
+  } catch {
+    manifestPath = `${actionPath}/action.yaml`;
+    try {
+      manifestText = await readFile(manifestPath, "utf8");
+    } catch {
+      failures.push(`${path}:${jobName}: local action manifest not found: ${actionPath}/action.yml`);
+      return;
+    }
+  }
+
+  const manifest = parse(manifestText);
+  const using = manifest.runs?.using;
+  if (using === "composite") {
+    for (const step of manifest.runs.steps ?? []) {
+      if (typeof step.uses === "string") {
+        if (step.uses.startsWith("./")) {
+          await validateLocalAction(step.uses, path, jobName, isPullRequest, visited);
+        } else if (!SHA_PIN.test(step.uses)) {
+          failures.push(`${manifestPath}: third-party action must use a full commit SHA: ${step.uses}`);
+        }
+      }
+      if (isPullRequest && typeof step.run === "string" && MUTATION_PATTERN.test(step.run)) {
+        failures.push(`${manifestPath}: local composite action contains a source or publication mutation`);
+      }
+    }
+  } else if (using === "docker" && typeof manifest.runs.image === "string" &&
+      manifest.runs.image.startsWith("docker://") && !isImmutableContainerImage(manifest.runs.image)) {
+    failures.push(`${manifestPath}: docker action image must pin an immutable digest: ${manifest.runs.image}`);
+  }
+}
+
 for (const file of files) {
   const path = `${directory}/${file}`;
   const document = parse(await readFile(path, "utf8"));
@@ -45,21 +99,35 @@ for (const file of files) {
       }
     }
     if (typeof job.uses === "string" && !job.uses.startsWith("./") &&
-        !/@[0-9a-f]{40}$/u.test(job.uses)) {
+        !SHA_PIN.test(job.uses)) {
       failures.push(`${path}:${jobName}: reusable workflow must use a full commit SHA: ${job.uses}`);
     }
+
+    const jobContainerImage = containerImageOf(job.container);
+    if (jobContainerImage !== undefined && !isImmutableContainerImage(jobContainerImage)) {
+      failures.push(`${path}:${jobName}: job container must pin an immutable digest: ${jobContainerImage}`);
+    }
+    for (const [serviceName, service] of Object.entries(job.services ?? {})) {
+      const serviceImage = containerImageOf(service);
+      if (serviceImage !== undefined && !isImmutableContainerImage(serviceImage)) {
+        failures.push(`${path}:${jobName}:${serviceName}: service container must pin an immutable digest: ${serviceImage}`);
+      }
+    }
+
     for (const step of job.steps ?? []) {
       if (typeof step.uses === "string" && !step.uses.startsWith("./") &&
-          !/@[0-9a-f]{40}$/u.test(step.uses)) {
+          !SHA_PIN.test(step.uses)) {
         failures.push(`${path}:${jobName}: third-party action must use a full commit SHA: ${step.uses}`);
+      }
+      if (typeof step.uses === "string" && step.uses.startsWith("./")) {
+        await validateLocalAction(step.uses, path, jobName, isPullRequest);
       }
       if (typeof step.uses === "string" && step.uses.startsWith("actions/checkout@")) {
         if (step.with?.["persist-credentials"] !== false) {
           failures.push(`${path}:${jobName}: checkout must set persist-credentials: false`);
         }
       }
-      if (isPullRequest && typeof step.run === "string" &&
-          /(^|[;&|\n]\s*)(git\s+push|gh\s+(pr|release)\s+|npm\s+publish|pnpm\s+publish)(\s|$)/u.test(step.run)) {
+      if (isPullRequest && typeof step.run === "string" && MUTATION_PATTERN.test(step.run)) {
         failures.push(`${path}:${jobName}: pull request workflow contains a source or publication mutation`);
       }
     }
