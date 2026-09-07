@@ -83,6 +83,7 @@ export interface CodestraErrorBody {
 export interface CloudEvent<TData = JsonObject> {
   specversion: "1.0";
   id: UUID;
+  tenantid: UUID;
   source: string;
   type: string;
   subject?: string;

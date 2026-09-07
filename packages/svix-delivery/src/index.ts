@@ -80,9 +80,9 @@ export class SvixDeliveryService {
     if (!this.enabled) {
       throw new SvixDeliveryError("Svix delivery is disabled.", "SVIX_DELIVERY_DISABLED");
     }
-    const tenantId = requireSingleLine(command.tenantId, "tenantId");
+    const tenantId = requireTenantId(command.tenantId);
     const idempotencyKey = requireIdempotencyKey(command.idempotencyKey);
-    validateCloudEvent(command.event);
+    validateCloudEvent(command.event, tenantId);
     const applicationId = requireSingleLine(
       await this.applicationResolver.resolveApplicationId(tenantId),
       "applicationId",
@@ -117,7 +117,10 @@ export class SvixDeliveryService {
   }
 }
 
-function validateCloudEvent(event: CloudEvent<JsonObject>): void {
+function validateCloudEvent(event: CloudEvent<JsonObject>, tenantId: UUID): void {
+  if (!event || requireTenantId(event.tenantid) !== tenantId) {
+    throw new SvixDeliveryError("Event tenant must match the delivery tenant.", "INVALID_EVENT_TENANT");
+  }
   if (event.specversion !== "1.0") {
     throw new SvixDeliveryError("Only CloudEvents 1.0 are supported.", "INVALID_CLOUD_EVENT");
   }
@@ -127,6 +130,13 @@ function validateCloudEvent(event: CloudEvent<JsonObject>): void {
   if (!Number.isFinite(Date.parse(event.time))) {
     throw new SvixDeliveryError("event.time must be an ISO date-time.", "INVALID_CLOUD_EVENT");
   }
+}
+
+function requireTenantId(value: unknown): UUID {
+  if (typeof value !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/iu.test(value)) {
+    throw new SvixDeliveryError("A valid tenant UUID is required.", "INVALID_EVENT_TENANT");
+  }
+  return value.toLowerCase();
 }
 
 function requireIdempotencyKey(value: string): string {
