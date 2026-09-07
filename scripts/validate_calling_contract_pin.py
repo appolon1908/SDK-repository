@@ -154,6 +154,25 @@ def self_test() -> None:
     finally:
         tampered.write_bytes(original)
 
+    # Prove canonical_digest is actually checked, not just documentation:
+    # corrupt only that field (components and their per-file sha256 values,
+    # and the vendored bytes themselves, are untouched, so this exercises
+    # exactly the canonical_digest comparison and nothing earlier in
+    # compute_authority_digest()), confirm rejection, and restore.
+    original_source = VENDOR_SOURCE.read_text(encoding="utf-8")
+    try:
+        corrupted = json.loads(original_source)
+        corrupted["canonical_digest"] = "0" * 64
+        VENDOR_SOURCE.write_text(json.dumps(corrupted), encoding="utf-8")
+        try:
+            validate(copy.deepcopy(EXPECTED))
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("manifest with a corrupted canonical_digest was accepted")
+    finally:
+        VENDOR_SOURCE.write_text(original_source, encoding="utf-8")
+
 
 def main() -> int:
     parser = argparse.ArgumentParser()
