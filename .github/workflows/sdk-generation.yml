@@ -25,7 +25,7 @@ concurrency:
 
 env:
   OPENAPI_GENERATOR_VERSION: 7.15.0
-  OPENAPI_GENERATOR_IMAGE: openapitools/openapi-generator-cli:v7.15.0
+  OPENAPI_GENERATOR_IMAGE: openapitools/openapi-generator-cli@sha256:509f01c3c7eee9d1ad286506a7b6aa4624a95b410be9a238a306d209e900621f
   REDOCLY_TELEMETRY: off
   REDOCLY_SUPPRESS_UPDATE_NOTICE: "true"
   SOURCE_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
@@ -36,16 +36,16 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout exact revision
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.SOURCE_SHA }}
           persist-credentials: false
       - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4.3.0
         with:
           version: 10.15.0
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: 22
           cache: pnpm
@@ -62,7 +62,7 @@ jobs:
           tar -C generated/php -czf "generated/codestra-php-${SOURCE_SHA}.tar.gz" .
           sha256sum generated/*.tar.gz > generated/SHA256SUMS
       - name: Upload generation evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: generated-sdks-${{ env.SOURCE_SHA }}
           path: |

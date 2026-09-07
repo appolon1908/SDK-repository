@@ -1,0 +1,17 @@
+name: Release blocker
+description: Record a missing gate or external dependency without manufacturing evidence.
+title: "release(blocker): "
+labels: ["release-blocker"]
+body:
+  - type: textarea
+    id: blocker
+    attributes: {label: Exact blocker and failed prerequisite}
+    validations: {required: true}
+  - type: textarea
+    id: scope
+    attributes: {label: Affected artifacts and milestone}
+    validations: {required: true}
+  - type: textarea
+    id: unblock
+    attributes: {label: Evidence required to unblock}
+    validations: {required: true}

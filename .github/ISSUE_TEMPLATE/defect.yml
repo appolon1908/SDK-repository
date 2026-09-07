@@ -1,0 +1,17 @@
+name: Defect
+description: Report a reproducible SDK, contract, connector, or tooling defect.
+title: "bug: "
+labels: ["defect"]
+body:
+  - type: textarea
+    id: failure
+    attributes: {label: Failure mode, description: Include safe reproduction evidence.}
+    validations: {required: true}
+  - type: textarea
+    id: boundary
+    attributes: {label: Authority boundary, description: State which trusted boundary is affected.}
+    validations: {required: true}
+  - type: textarea
+    id: expected
+    attributes: {label: Expected behavior}
+    validations: {required: true}
