@@ -1,0 +1,556 @@
+openapi: 3.1.0
+info:
+  title: Codestra Orbit Brand, Content, Asset, Shell and Publishing API
+  version: 2.0.0
+  description: >-
+    Same-origin resource contract for Codestra Orbit content, assets, navigation,
+    shell configuration, footer/social publication, page publication and release rollback.
+    Browser clients never receive provider credentials, identity tokens or private service URLs.
+servers:
+  - url: /api/v1
+    description: Same-origin browser API boundary
+security: []
+paths:
+  /brands/{brand}:
+    get:
+      operationId: getBrand
+      parameters:
+        - $ref: '#/components/parameters/Brand'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Published brand resource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BrandResource'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /brands/{brand}/theme:
+    get:
+      operationId: getBrandTheme
+      parameters:
+        - $ref: '#/components/parameters/Brand'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Published Orbit theme assignment
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ThemeResource'
+  /brands/{brand}/shell:
+    get:
+      operationId: getBrandShell
+      parameters:
+        - $ref: '#/components/parameters/Brand'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Published shell resource
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ShellResource'
+  /brands/{brand}/footer:
+    get:
+      operationId: getBrandFooter
+      parameters:
+        - $ref: '#/components/parameters/Brand'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Published footer resource. Unpublished social entries are omitted or disabled.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FooterResource'
+  /navigation/{brand}/{application}:
+    get:
+      operationId: getNavigation
+      parameters:
+        - $ref: '#/components/parameters/Brand'
+        - $ref: '#/components/parameters/Application'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Published application navigation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NavigationResource'
+  /pages/{brand}/{application}/{slug}:
+    get:
+      operationId: getPublishedPage
+      parameters:
+        - $ref: '#/components/parameters/Brand'
+        - $ref: '#/components/parameters/Application'
+        - $ref: '#/components/parameters/Slug'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Published page resource with stable content and asset keys
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PageResource'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /content/{contentKey}:
+    get:
+      operationId: getPublishedContent
+      parameters:
+        - $ref: '#/components/parameters/ContentKey'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Published content value
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ContentResource'
+  /assets/{assetId}:
+    get:
+      operationId: getPublishedAsset
+      parameters:
+        - $ref: '#/components/parameters/AssetId'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Published asset metadata. Binary delivery may use a signed or public immutable URL.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetResource'
+  /admin/brands/{brand}/footer:
+    put:
+      operationId: updateBrandFooterDraft
+      security:
+        - cookieAuth: []
+        - oauth2: [orbit.brand.admin]
+      parameters:
+        - $ref: '#/components/parameters/Brand'
+        - $ref: '#/components/parameters/CorrelationIdRequired'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ExpectedVersion'
+        - $ref: '#/components/parameters/ChangeReason'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FooterDraftMutation'
+      responses:
+        '200':
+          description: Durable draft with audit and idempotency evidence
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FooterResource'
+        '409':
+          $ref: '#/components/responses/VersionConflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailure'
+  /admin/brands/{brand}/footer/publish:
+    post:
+      operationId: publishBrandFooter
+      security:
+        - cookieAuth: []
+        - oauth2: [orbit.brand.admin]
+      parameters:
+        - $ref: '#/components/parameters/Brand'
+        - $ref: '#/components/parameters/CorrelationIdRequired'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ExpectedVersion'
+        - $ref: '#/components/parameters/ChangeReason'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishMutation'
+      responses:
+        '200':
+          description: Published footer with publication and rollback evidence
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicationResult'
+        '409':
+          $ref: '#/components/responses/VersionConflict'
+  /admin/pages/{pageId}/preview:
+    post:
+      operationId: previewPage
+      security:
+        - cookieAuth: []
+        - oauth2: [orbit.content.editor]
+      parameters:
+        - $ref: '#/components/parameters/PageId'
+        - $ref: '#/components/parameters/CorrelationIdRequired'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ExpectedVersion'
+        - $ref: '#/components/parameters/ChangeReason'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PageDraftMutation'
+      responses:
+        '200':
+          description: Non-public preview evidence
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreviewResult'
+  /admin/pages/{pageId}/publish:
+    post:
+      operationId: publishPage
+      security:
+        - cookieAuth: []
+        - oauth2: [orbit.content.publisher]
+      parameters:
+        - $ref: '#/components/parameters/PageId'
+        - $ref: '#/components/parameters/CorrelationIdRequired'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ExpectedVersion'
+        - $ref: '#/components/parameters/ChangeReason'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublishMutation'
+      responses:
+        '200':
+          description: Published page with immutable evidence
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicationResult'
+        '409':
+          $ref: '#/components/responses/VersionConflict'
+  /admin/releases/{releaseId}/rollback:
+    post:
+      operationId: rollbackContentRelease
+      security:
+        - cookieAuth: []
+        - oauth2: [orbit.release.rollback]
+      parameters:
+        - $ref: '#/components/parameters/ReleaseId'
+        - $ref: '#/components/parameters/CorrelationIdRequired'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/ExpectedVersion'
+        - $ref: '#/components/parameters/ChangeReason'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RollbackMutation'
+      responses:
+        '200':
+          description: Durable rollback result with read-back evidence
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RollbackResult'
+        '409':
+          $ref: '#/components/responses/VersionConflict'
+components:
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: codestra_session
+      description: Secure, HttpOnly, SameSite session cookie issued by the approved same-origin BFF.
+    oauth2:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://auth.codestra.co/realms/codestra/protocol/openid-connect/auth
+          tokenUrl: https://auth.codestra.co/realms/codestra/protocol/openid-connect/token
+          scopes:
+            orbit.brand.admin: Edit and publish brand/footer resources
+            orbit.content.editor: Edit and preview content
+            orbit.content.publisher: Publish content
+            orbit.release.rollback: Roll back published content releases
+  parameters:
+    Brand:
+      name: brand
+      in: path
+      required: true
+      schema: { type: string, pattern: '^[a-z0-9][a-z0-9-]{1,62}$' }
+    Application:
+      name: application
+      in: path
+      required: true
+      schema: { type: string, pattern: '^[a-z0-9][a-z0-9-]{1,62}$' }
+    Slug:
+      name: slug
+      in: path
+      required: true
+      schema: { type: string, pattern: '^[a-z0-9][a-z0-9/-]{0,199}$' }
+    ContentKey:
+      name: contentKey
+      in: path
+      required: true
+      schema: { type: string, pattern: '^[a-z0-9][a-z0-9._-]{2,199}$' }
+    AssetId:
+      name: assetId
+      in: path
+      required: true
+      schema: { type: string, minLength: 8, maxLength: 128 }
+    PageId:
+      name: pageId
+      in: path
+      required: true
+      schema: { type: string, minLength: 8, maxLength: 128 }
+    ReleaseId:
+      name: releaseId
+      in: path
+      required: true
+      schema: { type: string, minLength: 8, maxLength: 128 }
+    CorrelationId:
+      name: X-Correlation-ID
+      in: header
+      required: false
+      schema: { type: string, minLength: 8, maxLength: 128 }
+    CorrelationIdRequired:
+      name: X-Correlation-ID
+      in: header
+      required: true
+      schema: { type: string, minLength: 8, maxLength: 128 }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, minLength: 8, maxLength: 200 }
+    ExpectedVersion:
+      name: Expected-Version
+      in: header
+      required: true
+      schema: { type: integer, minimum: 0 }
+    ChangeReason:
+      name: X-Change-Reason
+      in: header
+      required: true
+      schema: { type: string, minLength: 8, maxLength: 500 }
+  schemas:
+    BrandResource:
+      type: object
+      additionalProperties: false
+      required: [brand, revision, displayName, canonicalDomain, published]
+      properties:
+        brand: { type: string }
+        revision: { type: integer, minimum: 1 }
+        displayName: { type: string }
+        canonicalDomain: { type: string, format: hostname }
+        published: { type: boolean }
+    ThemeResource:
+      type: object
+      additionalProperties: false
+      required: [brand, revision, designSystem, version, theme]
+      properties:
+        brand: { type: string }
+        revision: { type: integer, minimum: 1 }
+        designSystem: { const: Codestra Orbit }
+        version: { const: 2.0.0 }
+        theme: { const: dark }
+    ShellResource:
+      type: object
+      additionalProperties: false
+      required: [brand, revision, headerVariant, footerVariant, socialAllowed]
+      properties:
+        brand: { type: string }
+        revision: { type: integer, minimum: 1 }
+        headerVariant: { enum: [public, account, admin, auth] }
+        footerVariant: { enum: [full, compact, auth-compact, legal-only] }
+        socialAllowed: { type: boolean }
+        announcementContentKey: { type: [string, 'null'] }
+    FooterLink:
+      type: object
+      additionalProperties: false
+      required: [labelKey, href]
+      properties:
+        labelKey: { type: string, pattern: '^[a-z0-9][a-z0-9._-]{2,199}$' }
+        href: { type: string, format: uri-reference }
+    SocialLink:
+      type: object
+      additionalProperties: false
+      required: [network, url, enabled, validated]
+      properties:
+        network:
+          enum: [linkedin, facebook, instagram, x, youtube, github, tiktok, threads]
+        url: { type: string, format: uri, pattern: '^https://' }
+        enabled: { type: boolean }
+        validated: { type: boolean }
+    FooterResource:
+      type: object
+      additionalProperties: false
+      required: [brand, revision, expectedVersion, attribution, links, social, published]
+      properties:
+        brand: { type: string }
+        revision: { type: integer, minimum: 1 }
+        expectedVersion: { type: integer, minimum: 0 }
+        attribution: { const: Powered by Codestra.co }
+        links:
+          type: array
+          items: { $ref: '#/components/schemas/FooterLink' }
+        social:
+          type: array
+          items: { $ref: '#/components/schemas/SocialLink' }
+        published: { type: boolean }
+        auditEvidenceId: { type: [string, 'null'] }
+        publicationEvidenceId: { type: [string, 'null'] }
+        rollbackReleaseId: { type: [string, 'null'] }
+    FooterDraftMutation:
+      type: object
+      additionalProperties: false
+      required: [links, social, approvalHistory, auditEvidence]
+      properties:
+        links:
+          type: array
+          items: { $ref: '#/components/schemas/FooterLink' }
+        social:
+          type: array
+          items: { $ref: '#/components/schemas/SocialLink' }
+        approvalHistory:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/ApprovalRecord' }
+        auditEvidence: { $ref: '#/components/schemas/AuditEvidence' }
+    PageDraftMutation:
+      type: object
+      additionalProperties: false
+      required: [contentKeys, assetIds, approvalHistory, auditEvidence]
+      properties:
+        contentKeys:
+          type: object
+          additionalProperties: { type: string }
+        assetIds:
+          type: object
+          additionalProperties: { type: string }
+        approvalHistory:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/ApprovalRecord' }
+        auditEvidence: { $ref: '#/components/schemas/AuditEvidence' }
+    PublishMutation:
+      type: object
+      additionalProperties: false
+      required: [approvalHistory, auditEvidence, rollbackTarget]
+      properties:
+        approvalHistory:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/ApprovalRecord' }
+        auditEvidence: { $ref: '#/components/schemas/AuditEvidence' }
+        rollbackTarget: { type: string, minLength: 8 }
+    RollbackMutation:
+      type: object
+      additionalProperties: false
+      required: [targetReleaseId, approvalHistory, auditEvidence]
+      properties:
+        targetReleaseId: { type: string, minLength: 8 }
+        approvalHistory:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/ApprovalRecord' }
+        auditEvidence: { $ref: '#/components/schemas/AuditEvidence' }
+    ApprovalRecord:
+      type: object
+      additionalProperties: false
+      required: [actorId, decision, decidedAt]
+      properties:
+        actorId: { type: string }
+        decision: { enum: [approved, rejected] }
+        decidedAt: { type: string, format: date-time }
+    AuditEvidence:
+      type: object
+      additionalProperties: false
+      required: [actorId, correlationId, reason]
+      properties:
+        actorId: { type: string }
+        correlationId: { type: string }
+        reason: { type: string, minLength: 8, maxLength: 500 }
+    NavigationResource:
+      type: object
+      required: [brand, application, revision, items]
+      properties:
+        brand: { type: string }
+        application: { type: string }
+        revision: { type: integer, minimum: 1 }
+        items:
+          type: array
+          items: { $ref: '#/components/schemas/FooterLink' }
+    PageResource:
+      type: object
+      required: [brand, application, slug, revision, contentKeys, assetIds, shell]
+      properties:
+        brand: { type: string }
+        application: { type: string }
+        slug: { type: string }
+        revision: { type: integer, minimum: 1 }
+        contentKeys:
+          type: object
+          additionalProperties: { type: string }
+        assetIds:
+          type: object
+          additionalProperties: { type: string }
+        shell: { $ref: '#/components/schemas/ShellResource' }
+        seo:
+          type: object
+          additionalProperties: { type: string }
+    ContentResource:
+      type: object
+      required: [contentKey, revision, value]
+      properties:
+        contentKey: { type: string }
+        revision: { type: integer, minimum: 1 }
+        value: { type: string }
+    AssetResource:
+      type: object
+      required: [assetId, revision, mediaType, url, altContentKey]
+      properties:
+        assetId: { type: string }
+        revision: { type: integer, minimum: 1 }
+        mediaType: { type: string }
+        url: { type: string, format: uri }
+        altContentKey: { type: string }
+        width: { type: [integer, 'null'], minimum: 1 }
+        height: { type: [integer, 'null'], minimum: 1 }
+        sha256: { type: [string, 'null'], pattern: '^[0-9a-f]{64}$' }
+    PreviewResult:
+      type: object
+      required: [pageId, previewId, expiresAt, correlationId]
+      properties:
+        pageId: { type: string }
+        previewId: { type: string }
+        expiresAt: { type: string, format: date-time }
+        correlationId: { type: string }
+    PublicationResult:
+      type: object
+      required: [releaseId, resourceVersion, publicationEvidenceId, rollbackReleaseId, correlationId]
+      properties:
+        releaseId: { type: string }
+        resourceVersion: { type: integer, minimum: 1 }
+        publicationEvidenceId: { type: string }
+        rollbackReleaseId: { type: string }
+        correlationId: { type: string }
+    RollbackResult:
+      type: object
+      required: [releaseId, restoredReleaseId, resourceVersion, rollbackEvidenceId, correlationId]
+      properties:
+        releaseId: { type: string }
+        restoredReleaseId: { type: string }
+        resourceVersion: { type: integer, minimum: 1 }
+        rollbackEvidenceId: { type: string }
+        correlationId: { type: string }
+  responses:
+    NotFound:
+      description: Resource not found
+    VersionConflict:
+      description: Expected resource version does not match the durable current version
+    ValidationFailure:
+      description: Mutation failed authorization, approval, URL, content-key, asset or policy validation

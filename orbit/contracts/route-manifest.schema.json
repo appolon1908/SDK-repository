@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.codestra.co/orbit/v2/route-manifest.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "application",
+    "routes"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "2.0.0"
+    },
+    "application": {
+      "type": "string",
+      "minLength": 1
+    },
+    "routes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "template",
+          "auth",
+          "shell",
+          "footer",
+          "contentKeys",
+          "assetIds",
+          "states"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^/"
+          },
+          "template": {
+            "type": "string",
+            "minLength": 1
+          },
+          "auth": {
+            "enum": [
+              "public",
+              "optional",
+              "required",
+              "operator"
+            ]
+          },
+          "shell": {
+            "enum": [
+              "public",
+              "auth",
+              "account",
+              "operator",
+              "legal",
+              "error"
+            ]
+          },
+          "footer": {
+            "enum": [
+              "full",
+              "compact",
+              "auth-compact",
+              "legal-only",
+              "none-private-tool"
+            ]
+          },
+          "contentKeys": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "assetIds": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "states": {
+            "type": "array",
+            "uniqueItems": true,
+            "contains": {
+              "const": "loading"
+            },
+            "items": {
+              "enum": [
+                "loading",
+                "empty",
+                "degraded",
+                "offline",
+                "error",
+                "permission-denied",
+                "success"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

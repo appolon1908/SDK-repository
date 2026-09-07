@@ -1,0 +1,78 @@
+name: codestra
+
+# Unifies every deployable service in this monorepo into one local/staging
+# stack. `include:` (Compose spec v2.20+) pulls in each service's own
+# hardened compose file unmodified rather than duplicating its config here.
+#
+#   docker compose up                       # middleware + postgres + the 3 apps
+#   docker compose --profile optional-camel up   # also start camel-protocol-gateway
+#     (requires CODESTRA_CAMEL_GATEWAY_IMAGE; see services/camel-protocol-gateway/compose.yaml)
+#
+# The three dashboard apps (admin-console, developer-portal, ops-dashboard)
+# currently render from synthetic fixtures (see apps/_shared's description)
+# rather than calling middleware live, so they are not wired with
+# `depends_on: middleware` -- that dependency does not exist in the code yet,
+# and they run on the default compose network like middleware itself.
+# camel-protocol-gateway keeps its own external `codestra-private` network
+# and stricter isolation deliberately (see services/camel-protocol-gateway/
+# compose.yaml); this file does not attach anything else to it, so a plain
+# `docker compose up` never requires that network to pre-exist.
+
+include:
+  - services/middleware/docker-compose.yml
+  - services/camel-protocol-gateway/compose.yaml
+
+x-security: &security
+  security_opt:
+    - no-new-privileges:true
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "3"
+
+services:
+  ops-dashboard:
+    <<: *security
+    build:
+      context: .
+      dockerfile: apps/ops-dashboard/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3001/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  developer-portal:
+    <<: *security
+    build:
+      context: .
+      dockerfile: apps/developer-portal/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3002/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
+  admin-console:
+    <<: *security
+    build:
+      context: .
+      dockerfile: apps/admin-console/Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:3003/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s

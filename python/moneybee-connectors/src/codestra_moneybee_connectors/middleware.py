@@ -31,7 +31,10 @@ class MiddlewareClientConfig(BaseModel):
     model_config = ConfigDict(extra="forbid", frozen=True)
 
     base_url: HttpUrl
-    enabled: bool = False
+    # Constructing the client with an explicit endpoint and token provider enables
+    # safe Middleware connectivity/readback. Consequential commands remain denied
+    # unless their capability is separately present in allowed_capabilities.
+    enabled: bool = True
     timeout_seconds: float = Field(default=10.0, gt=0, le=60)
     read_attempts: int = Field(default=3, ge=1, le=5)
     allowed_capabilities: frozenset[str] = frozenset()
@@ -68,8 +71,11 @@ class Operation(BaseModel):
 class CodestraMiddlewareClient:
     """Client for the verified `/v1/commands` and `/v1/operations/{id}` contract.
 
-    Mutations are attempted exactly once. Transport ambiguity is surfaced as
-    ``UnknownOutcomeError`` and callers must read the operation back.
+    Readback is available after callers explicitly construct the client with a
+    secure base URL and token provider. Mutations are still denied unless the
+    requested capability is explicitly allowlisted. Mutations are attempted
+    exactly once; transport ambiguity is surfaced as ``UnknownOutcomeError``
+    and callers must read the operation back.
     """
 
     def __init__(

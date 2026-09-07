@@ -27,6 +27,20 @@ const operation = {
 } as const;
 
 describe("CodestraCommunicationsClient", () => {
+  it("validates every batch recipient before dispatching a command", async () => {
+    const fetchMock = vi.fn<typeof fetch>();
+    const client = testClient(fetchMock);
+    await expect(client.email.sendBatch({ messages: [
+      { from: { email: "support@example.com" }, to: [{ email: "valid@example.com" }], subject: "Hi", content: { text: "Hello" } },
+      { from: { email: "support@example.com" }, to: [{ email: "invalid" }], subject: "Hi", content: { text: "Hello" } },
+    ] }, { idempotencyKey: "email-batch-0001" })).rejects.toThrow(CodestraCommunicationsContractViolationError);
+    await expect(client.sms.sendBatch({ messages: [
+      { to: { phoneNumber: "+15551234567" }, body: "Hello", mediaUrls: ["https://example.com/image.png"] },
+      { to: { phoneNumber: "invalid" }, body: "Hello" },
+    ] }, { idempotencyKey: "sms-batch-0001" })).rejects.toThrow(CodestraCommunicationsContractViolationError);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("submits email through the Middleware command plane", async () => {
     const fetchMock = vi.fn<typeof fetch>().mockResolvedValue(jsonResponse(202, operation));
     const client = testClient(fetchMock);

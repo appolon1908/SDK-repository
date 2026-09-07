@@ -1,0 +1,10 @@
+extends:
+  - recommended
+rules:
+  # Orbit accepts redirect-only auth operations and keeps prose style outside
+  # the semantic gate; structure, references, schemas, and security remain on.
+  operation-summary: off
+  operation-operationId: warn
+  operation-2xx-response: off
+  operation-4xx-response: off
+  info-license: warn

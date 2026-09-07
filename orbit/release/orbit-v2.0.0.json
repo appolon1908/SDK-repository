@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "2.0.0",
+  "release": "orbit-v2.0.0",
+  "status": "superseded-source-candidate",
+  "installAllowed": false,
+  "sourceCommit": "b537296b9ea34161d8ab367fd436a6d7194dcb40",
+  "supersededReason": "The approved September 2, 2026 corporate color, geometry, footer and governed-content contract was corrected after these tarballs were created.",
+  "installPolicy": "Do not install the committed superseded tarballs. The exact pull-request head workflow builds fresh tarballs, checksums them and uploads them as a non-production CI artifact. A protected post-merge release must publish artifacts pinned to the final accepted source SHA.",
+  "replacementBuildWorkflow": ".github/workflows/orbit-system.yml",
+  "artifacts": [
+    {
+      "package": "@corporate/auth-ui",
+      "version": "2.0.0",
+      "path": "orbit/dist/corporate-auth-ui-2.0.0.tgz",
+      "sha256": "e560add3f05d3017ea4b8209f9fd610d011bac5ba01515014cc316855b645a55",
+      "size": 2976,
+      "installAllowed": false
+    },
+    {
+      "package": "@corporate/brand-registry",
+      "version": "2.0.0",
+      "path": "orbit/dist/corporate-brand-registry-2.0.0.tgz",
+      "sha256": "d6a0cf9390446ebbc9cd6de935b5e50b065ca9185ac0b4f36f680e77b4c72cbd",
+      "size": 3080,
+      "installAllowed": false
+    },
+    {
+      "package": "@corporate/content-sdk",
+      "version": "2.0.0",
+      "path": "orbit/dist/corporate-content-sdk-2.0.0.tgz",
+      "sha256": "a6f317647bbac66b3f75fa7166eafc75818c294fe111065b4161c17de1f845da",
+      "size": 1971,
+      "installAllowed": false
+    },
+    {
+      "package": "@corporate/design-tokens",
+      "version": "2.0.0",
+      "path": "orbit/dist/corporate-design-tokens-2.0.0.tgz",
+      "sha256": "ac9b6e3b57d67304ec7a4cda045a64886946b8b4ceb16d656a2f35ff04e12ed6",
+      "size": 2473,
+      "installAllowed": false
+    },
+    {
+      "package": "@corporate/eslint-config",
+      "version": "2.0.0",
+      "path": "orbit/dist/corporate-eslint-config-2.0.0.tgz",
+      "sha256": "a86da3f401836cff4b7c7590eeb07a4732f394bcc72cbb88afbbd5a3e932772b",
+      "size": 1600,
+      "installAllowed": false
+    },
+    {
+      "package": "@corporate/icons",
+      "version": "2.0.0",
+      "path": "orbit/dist/corporate-icons-2.0.0.tgz",
+      "sha256": "1f18050b637a248f3de89686484b2f998b8ccdd620ce0ff69c69b5909050ace8",
+      "size": 1421,
+      "installAllowed": false
+    },
+    {
+      "package": "@corporate/stylelint-config",
+      "version": "2.0.0",
+      "path": "orbit/dist/corporate-stylelint-config-2.0.0.tgz",
+      "sha256": "baf2023cd6a5d03b33af46157848f05256b58522df70b216da85f7341fce38bc",
+      "size": 872,
+      "installAllowed": false
+    },
+    {
+      "package": "@corporate/testing",
+      "version": "2.0.0",
+      "path": "orbit/dist/corporate-testing-2.0.0.tgz",
+      "sha256": "19b37434c4123e369294b3a7a70de65983e337348de30a83105c97632efc0a92",
+      "size": 2005,
+      "installAllowed": false
+    },
+    {
+      "package": "@corporate/ui",
+      "version": "2.0.0",
+      "path": "orbit/dist/corporate-ui-2.0.0.tgz",
+      "sha256": "9f69c3669fccd09faf2b0478d61e4155a3ab5779f962d383cf60bafa11f2595a",
+      "size": 4600,
+      "installAllowed": false
+    }
+  ]
+}
