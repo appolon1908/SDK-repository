@@ -45,6 +45,15 @@ concrete gap it closes, not just a general direction.
   (used ad hoc on a few PRs this session) collapses "wait for CI, notice approval, merge" into
   one step. Making it the default for PRs opened by automation — rather than something enabled
   PR-by-PR — would remove most of the manual status-checking this session did by hand.
+- **Add `docker` and Python ecosystems to Dependabot.** `.github/dependabot.yml` currently only
+  watches `npm`, `github-actions`, and `maven` (the last scoped to
+  `services/camel-protocol-gateway`). Every service's Dockerfile base image and
+  `python/moneybee-connectors`'s dependencies get no automated update PRs at all today —
+  someone has to notice and bump them by hand.
+- **A CODEOWNERS file.** Every PR this session — regardless of which part of the repo it
+  touched — needed the same one human reviewer found and pinged manually. A `CODEOWNERS` file
+  would let GitHub auto-request the right reviewer(s) the moment a PR opens, instead of that
+  being an implicit, undocumented convention.
 
 ## SDK / developer experience
 
@@ -62,6 +71,12 @@ concrete gap it closes, not just a general direction.
   entries share a lot of boilerplate (capability gates, activation checks, Middleware client
   wiring); a `pnpm create-adapter <name>` style generator would reduce the copy-paste involved
   in adding one.
+- **Wire changesets up to an actual release.** `.changeset/config.json` is configured and there
+  are five changeset files already checked in describing pending changes, but no workflow
+  anywhere runs `changeset version` or `changeset publish` — contributors are authoring release
+  notes that currently go nowhere. Adding a release workflow (or at minimum a
+  `changeset version` job that opens a version-bump PR) would make that authored intent
+  actually land somewhere.
 
 ## Observability
 
