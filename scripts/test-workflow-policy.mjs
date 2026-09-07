@@ -13,7 +13,8 @@ async function evaluate(name, workflow, expectedFragment) {
     env: { ...process.env, WORKFLOW_DIRECTORY: directory },
   });
   await rm(join(directory, `${name}.yml`));
-  if (result.status === 0 || !result.stderr.includes(expectedFragment)) {
+  if (expectedFragment === null ? result.status !== 0 :
+      result.status === 0 || !result.stderr.includes(expectedFragment)) {
     throw new Error(`${name} did not fail closed: ${result.stdout}${result.stderr}`);
   }
 }
@@ -22,8 +23,15 @@ try {
   const prefix = "on: [pull_request]\npermissions: {contents: read}\njobs:\n  test:\n    runs-on: ubuntu-24.04\n    steps:\n";
   await evaluate("mutable-action", `${prefix}      - uses: actions/checkout@v4\n        with: {persist-credentials: false}\n`, "full commit SHA");
   await evaluate("write-permission", "on: [pull_request]\npermissions: {contents: read}\njobs:\n  test:\n    permissions: {contents: write}\n    runs-on: ubuntu-24.04\n    steps: []\n", "contents: write");
+  await evaluate("write-all-permission", "on: [pull_request]\npermissions: {contents: read}\njobs:\n  test:\n    permissions: write-all\n    runs-on: ubuntu-24.04\n    steps: []\n", "write-all");
+  const reusablePrefix = "on: [pull_request]\npermissions: {contents: read}\njobs:\n  test:\n    permissions: read-all\n    uses: ";
+  await evaluate("mutable-reusable-workflow", `${reusablePrefix}owner/repo/.github/workflows/build.yml@main\n`, "full commit SHA");
+  await evaluate("tagged-reusable-workflow", `${reusablePrefix}owner/repo/.github/workflows/build.yml@v1\n`, "full commit SHA");
+  await evaluate("short-reusable-workflow-sha", `${reusablePrefix}owner/repo/.github/workflows/build.yml@1234567\n`, "full commit SHA");
+  await evaluate("pinned-reusable-workflow", `${reusablePrefix}owner/repo/.github/workflows/build.yml@${"a".repeat(40)}\n`, null);
+  await evaluate("local-reusable-workflow", `${reusablePrefix}./.github/workflows/build.yml\n`, null);
   await evaluate("source-push", `${prefix}      - run: git push origin HEAD\n`, "source or publication mutation");
-  console.log("Workflow policy negative fixtures passed.");
+  console.log("Workflow policy positive and negative fixtures passed.");
 } finally {
   await rm(directory, { recursive: true, force: true });
 }

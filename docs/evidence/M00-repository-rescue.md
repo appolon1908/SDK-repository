@@ -18,3 +18,19 @@ EXTERNAL_DEPENDENCIES=Exact-head aggregate rerun; human review; release environm
 KNOWN_LIMITATIONS=M00 does not certify Middleware, Kong/identity, product-local restricted gateways, providers, staging, or system production readiness. The review baseline predates substantial current main history, which is preserved and not imported into this historical integration line.
 ROLLBACK=Close the M00 PR without merge; archive tags preserve both historical heads. Do not rewrite or delete main, integration/v0.1, protected branches, or archive tags.
 NEXT_MILESTONE=M01
+
+## Workflow policy review repair — 2026-09-07
+
+PR #111's initial validator accepted PR job `permissions: write-all` and
+job-level reusable workflow references at mutable branches or tags. The
+validator now rejects both forms. Full commit-pinned reusable workflows and
+repository-local reusable workflows remain accepted with read-only permissions.
+
+The new scalar-permission regression fails against the previous implementation.
+All nine positive/negative policy fixtures pass after the repair, and the six
+current workflows validate. Frozen dependencies were installed with the declared
+pnpm 10.15.0. Hosted exact-head required gates and an independent review remain
+required before the repaired PR can merge into `integration/v0.1`.
+
+This completes the reported policy code defects; it does not certify runtime
+integrations or authorize package publication. M01 remains the next milestone.

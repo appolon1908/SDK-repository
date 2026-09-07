@@ -36,10 +36,17 @@ for (const file of files) {
       failures.push(`${path}:${jobName}: pull request jobs must not consume secrets`);
     }
     const jobPermissions = job.permissions ?? {};
+    if (isPullRequest && jobPermissions === "write-all") {
+      failures.push(`${path}:${jobName}: pull request write-all permissions are forbidden`);
+    }
     if (isPullRequest && typeof jobPermissions === "object") {
       for (const [scope, level] of Object.entries(jobPermissions)) {
         if (level === "write") failures.push(`${path}:${jobName}: pull request ${scope}: write is forbidden`);
       }
+    }
+    if (typeof job.uses === "string" && !job.uses.startsWith("./") &&
+        !/@[0-9a-f]{40}$/u.test(job.uses)) {
+      failures.push(`${path}:${jobName}: reusable workflow must use a full commit SHA: ${job.uses}`);
     }
     for (const step of job.steps ?? []) {
       if (typeof step.uses === "string" && !step.uses.startsWith("./") &&
