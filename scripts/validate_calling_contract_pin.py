@@ -34,32 +34,36 @@ EXPECTED = {
 }
 
 
-def sha256_file(path: Path) -> str:
-    digest = hashlib.sha256()
-    digest.update(path.read_bytes())
-    return digest.hexdigest()
-
-
 def compute_authority_digest() -> str:
     """Reproduce scripts/telephony-contract-digest.sh exactly: sha256sum
     each component file at its original upstream path, then sha256 the
     concatenated `<hex>  <path>\\n` lines -- GNU coreutils' own text-mode
-    output format, byte for byte."""
+    output format, byte for byte. This requires the manifest's `components`
+    array to already be in the same order the upstream script enumerates
+    files in; there is no independent check of that ordering here."""
     source = parse_document(VENDOR_SOURCE.read_text(encoding="utf-8"))
     lines: list[str] = []
     for component in source["components"]:
+        source_path = component["source_path"]
         # Vendored files sit at the same relative path as in the authority
         # repo (see the "layout" note in calling-contract-authority.source.json),
         # so their own internal relative $ref values resolve correctly.
-        vendored = VENDOR_DIR / component["source_path"]
-        actual = sha256_file(vendored)
+        vendored = VENDOR_DIR / source_path
+        actual = hashlib.sha256(vendored.read_bytes()).hexdigest()
         if actual != component["sha256"]:
             raise ValueError(
-                f"vendored authority file {component['source_path']} does not match its pinned sha256"
+                f"vendored authority file {source_path} does not match its pinned sha256"
                 " (contracts/vendor/calling-contract-authority/calling-contract-authority.source.json is stale or the file was edited)"
             )
-        lines.append(f"{actual}  {component['source_path']}\n")
-    return hashlib.sha256("".join(lines).encode("utf-8")).hexdigest()
+        lines.append(f"{actual}  {source_path}\n")
+    digest = hashlib.sha256("".join(lines).encode("utf-8")).hexdigest()
+    if digest != source["canonical_digest"]:
+        raise ValueError(
+            "calling-contract-authority.source.json's canonical_digest does not match the digest"
+            f" just recomputed from its own components list (recomputed {digest}) -- the manifest's"
+            " documented digest has drifted from the components it documents"
+        )
+    return digest
 
 
 def reject_duplicate_pairs(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
@@ -149,6 +153,25 @@ def self_test() -> None:
             raise AssertionError("tampered vendored authority file was accepted")
     finally:
         tampered.write_bytes(original)
+
+    # Prove canonical_digest is actually checked, not just documentation:
+    # corrupt only that field (components and their per-file sha256 values,
+    # and the vendored bytes themselves, are untouched, so this exercises
+    # exactly the canonical_digest comparison and nothing earlier in
+    # compute_authority_digest()), confirm rejection, and restore.
+    original_source = VENDOR_SOURCE.read_text(encoding="utf-8")
+    try:
+        corrupted = json.loads(original_source)
+        corrupted["canonical_digest"] = "0" * 64
+        VENDOR_SOURCE.write_text(json.dumps(corrupted), encoding="utf-8")
+        try:
+            validate(copy.deepcopy(EXPECTED))
+        except ValueError:
+            pass
+        else:
+            raise AssertionError("manifest with a corrupted canonical_digest was accepted")
+    finally:
+        VENDOR_SOURCE.write_text(original_source, encoding="utf-8")
 
 
 def main() -> int:
