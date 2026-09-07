@@ -9,7 +9,7 @@ on:
       - "scripts/validate_calling_contract_pin.py"
       - "contracts/vendor/calling-contract-authority/**"
   push:
-    branches: ["main"]
+    branches: ["development", "staging", "main", "production"]
     paths:
       - ".codestra/calling-contract.lock.json"
       - ".github/workflows/calling-contract-pin.yml"
