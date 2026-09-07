@@ -28,15 +28,6 @@ export class CodestraApi implements ICredentialType {
       default: "",
       required: true,
     },
-    {
-      displayName: "Internal Trigger Token",
-      name: "internalWebhookToken",
-      type: "string",
-      typeOptions: { password: true },
-      default: "",
-      required: true,
-      description: "Separate high-entropy token used only by Middleware to invoke the internal event trigger.",
-    },
   ];
 
   authenticate: IAuthenticateGeneric = {

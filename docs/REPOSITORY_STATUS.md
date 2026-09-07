@@ -12,3 +12,9 @@ uncertified. No live delivery or dialing capability is authorized.
 Current milestone evidence is under `docs/evidence/`. Candidate publication is
 blocked until M00-M14 and applicable M17 certification pass on one exact SHA.
 Stable publication and merge to protected `main` require human approval.
+
+M01 source work now implements the signed inbound n8n boundary with canonical
+tenant validation and a durable Redis replay claim. See
+`docs/evidence/M01-signed-inbound-boundary.md` for test evidence and the remaining
+deployed n8n, ingress, producer migration and Redis topology certification.
+This does not certify system readiness or authorize live delivery.

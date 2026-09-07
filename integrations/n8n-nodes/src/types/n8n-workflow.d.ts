@@ -45,6 +45,8 @@ declare module "n8n-workflow" {
   }
 
   export interface IWebhookFunctions {
+    getRequestObject(): { rawBody?: Uint8Array; rawHeaders?: string[]; readRawBody?: () => Promise<void> };
+    getResponseObject(): { status(code: number): { json(body: unknown): unknown } };
     getCredentials(name: string): Promise<ICredentialDataDecryptedObject>;
     getHeaderData(): Record<string, string | string[] | undefined>;
     getBodyData(): IDataObject;
@@ -54,8 +56,9 @@ declare module "n8n-workflow" {
   }
 
   export interface IWebhookResponseData {
+    noWebhookResponse?: boolean;
     webhookResponse?: { status: number; body?: unknown };
-    workflowData: INodeExecutionData[][];
+    workflowData?: INodeExecutionData[][];
   }
 
   export interface INodeTypeDescription extends Record<string, unknown> {

@@ -60,10 +60,11 @@ components:
     CloudEventEnvelope:
       type: object
       additionalProperties: false
-      required: [specversion, id, source, type, time, datacontenttype, data]
+      required: [specversion, id, tenantid, source, type, time, datacontenttype, data]
       properties:
         specversion: { const: '1.0' }
         id: { type: string, format: uuid }
+        tenantid: { type: string, format: uuid }
         source: { type: string, format: uri-reference }
         type: { type: string }
         subject: { type: string }
