@@ -99,6 +99,7 @@ jobs:
           context: .
           file: ${{ matrix.service.dockerfile }}
           push: true
+          sbom: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=${{ matrix.service.name }}
@@ -151,6 +152,7 @@ jobs:
             MAVEN_IMAGE=${{ vars.CAMEL_GATEWAY_MAVEN_IMAGE }}
             RUNTIME_IMAGE=${{ vars.CAMEL_GATEWAY_RUNTIME_IMAGE }}
           push: true
+          sbom: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha,scope=camel-protocol-gateway
