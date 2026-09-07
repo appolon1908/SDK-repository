@@ -45,7 +45,7 @@ def compute_authority_digest() -> str:
     each component file at its original upstream path, then sha256 the
     concatenated `<hex>  <path>\\n` lines -- GNU coreutils' own text-mode
     output format, byte for byte."""
-    source = json.loads(VENDOR_SOURCE.read_text(encoding="utf-8"))
+    source = parse_document(VENDOR_SOURCE.read_text(encoding="utf-8"))
     lines: list[str] = []
     for component in source["components"]:
         # Vendored files sit at the same relative path as in the authority
