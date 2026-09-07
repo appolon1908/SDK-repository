@@ -27,7 +27,7 @@ VENDOR_DIR = ROOT / "contracts/vendor/calling-contract-authority"
 VENDOR_SOURCE = VENDOR_DIR / "calling-contract-authority.source.json"
 EXPECTED = {
     "version": "1.0.0",
-    "sha256": "b39cdffe56a8185c91174228f0423df68b1137f34875f6ee52f9914f904bf724",
+    "sha256": "e5ea6ddcc01c1a54d839e1932e55a8da6d911263cae8d135a67bc9c79226d99e",
     "authority": "appolon1908-hue/codestra-production-platform#257",
     "role": "generated_clients",
     "external_effects_enabled": False,
@@ -45,7 +45,7 @@ def compute_authority_digest() -> str:
     each component file at its original upstream path, then sha256 the
     concatenated `<hex>  <path>\\n` lines -- GNU coreutils' own text-mode
     output format, byte for byte."""
-    source = json.loads(VENDOR_SOURCE.read_text(encoding="utf-8"))
+    source = parse_document(VENDOR_SOURCE.read_text(encoding="utf-8"))
     lines: list[str] = []
     for component in source["components"]:
         # Vendored files sit at the same relative path as in the authority
@@ -121,7 +121,7 @@ def self_test() -> None:
         raise AssertionError(f"negative lock fixture {number} was accepted")
 
     duplicate_json = [
-        '{"sha256":"0","sha256":"b39cdffe56a8185c91174228f0423df68b1137f34875f6ee52f9914f904bf724"}',
+        '{"sha256":"0","sha256":"e5ea6ddcc01c1a54d839e1932e55a8da6d911263cae8d135a67bc9c79226d99e"}',
         '{"authority":"wrong","authority":"appolon1908-hue/codestra-production-platform#257"}',
         '{"external_effects_enabled":true,"external_effects_enabled":false}',
         '{"external_effects_enabled":false,"external_effects_enabled":true}',
