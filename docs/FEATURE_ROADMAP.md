@@ -77,6 +77,10 @@ concrete gap it closes, not just a general direction.
   notes that currently go nowhere. Adding a release workflow (or at minimum a
   `changeset version` job that opens a version-bump PR) would make that authored intent
   actually land somewhere.
+- **A pull request template.** There's no `.github/pull_request_template.md` or
+  `.github/ISSUE_TEMPLATE/` — every PR body this session (including the ones adding this
+  roadmap) was structured ad hoc rather than against a shared template, so there's nothing
+  prompting a contributor for the same "summary / verified / rollback" sections consistently.
 
 ## Observability
 
@@ -88,3 +92,7 @@ concrete gap it closes, not just a general direction.
   each consuming service today; a shared helper would give consistent spans across provider
   adapters, the middleware client, and generated clients without each one wiring it up
   independently.
+- **Track test coverage over time instead of only computing it locally.** `test:coverage`
+  already runs `vitest run --coverage` in CI, but the result isn't uploaded anywhere (no
+  Codecov/Coveralls step) — there's no trend line and no way to see coverage delta on a PR
+  without reading raw CI logs.
