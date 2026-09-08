@@ -14,7 +14,7 @@ dependencies = ["httpx==0.28.1", "pydantic==2.12.5"]
 test = [
   "cyclonedx-bom==7.3.1",
   "pip-audit==2.10.1",
-  "pytest==9.0.3",
+  "pytest==9.1.1",
   "pytest-asyncio==1.4.0",
 ]
 
