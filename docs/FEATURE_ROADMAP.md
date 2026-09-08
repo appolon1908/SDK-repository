@@ -29,11 +29,6 @@ concrete gap it closes, not just a general direction.
 
 ## Supply chain / CI hardening
 
-- **SBOM generation on published Docker images.** `docker-publish.yml` uses Buildx to push to
-  GHCR, which already attaches a minimal SLSA provenance attestation by default — but there's
-  still no SBOM. Adding one (e.g. `docker/build-push-action`'s `sbom: true` input, or a
-  dedicated `syft` step) would give consumers a verifiable record of what's actually in each
-  image, which provenance alone doesn't provide.
 - **Branch-protection parity check across `development`/`staging`/`main`/`production`.** This
   session repeatedly hit required-status-check lists that had drifted out of sync across the
   four promotion branches (a check present on one branch's protection rules but not another's,
@@ -45,11 +40,14 @@ concrete gap it closes, not just a general direction.
   (used ad hoc on a few PRs this session) collapses "wait for CI, notice approval, merge" into
   one step. Making it the default for PRs opened by automation — rather than something enabled
   PR-by-PR — would remove most of the manual status-checking this session did by hand.
-- **Add `docker` and Python ecosystems to Dependabot.** `.github/dependabot.yml` currently only
-  watches `npm`, `github-actions`, and `maven` (the last scoped to
-  `services/camel-protocol-gateway`). Every service's Dockerfile base image and
-  `python/moneybee-connectors`'s dependencies get no automated update PRs at all today —
-  someone has to notice and bump them by hand.
+- **Track `camel-protocol-gateway`'s base images somewhere Dependabot can reach.** Its
+  Dockerfile's `FROM ${MAVEN_IMAGE}` / `FROM ${RUNTIME_IMAGE}` are bare ARG placeholders with no
+  literal reference in the file — the actual images are supplied at build time via the
+  `CAMEL_GATEWAY_MAVEN_IMAGE`/`CAMEL_GATEWAY_RUNTIME_IMAGE` repository variables (see
+  `docker-publish.yml`). Dependabot's `docker` ecosystem has nothing to scan there, so this
+  image is the one exception to the Dockerfile coverage added elsewhere in this roadmap. Either
+  store the pinned references in a file Dependabot can read, or add separate automation that
+  checks and updates the repository variables.
 - **A CODEOWNERS file.** Every PR this session — regardless of which part of the repo it
   touched — needed the same one human reviewer found and pinged manually. A `CODEOWNERS` file
   would let GitHub auto-request the right reviewer(s) the moment a PR opens, instead of that
