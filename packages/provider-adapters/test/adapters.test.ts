@@ -1,3 +1,4 @@
+import { getEventListeners } from "node:events";
 import { describe, expect, it, vi } from "vitest";
 import type { ConnectorContext } from "@codestra/connector-kit";
 import { canonicalEvent, KlyrowAdapter, PostizAdapter } from "../src/index.js";
@@ -215,6 +216,72 @@ describe("provider adapters", () => {
 
     await expect(adapter.execute(context, command)).rejects.toMatchObject({ code: "UPSTREAM_UNAVAILABLE" });
     expect(fetchMock).toHaveBeenCalledTimes(3);
+  });
+
+  it("honors the gateway's declared retryable:false over the status-based default", async () => {
+    const fetchMock = vi.fn<typeof fetch>(async () =>
+      jsonResponse({ error: { code: "PERMANENT_FAILURE", message: "no retry", retryable: false } }, { status: 503 }),
+    );
+    const adapter = new PostizAdapter({
+      baseUrl: "https://postiz.internal",
+      tokenProvider: () => "secret-token",
+      enabled: true,
+      enabledOperations: ["social.post.create"],
+      fetch: fetchMock,
+      sleep: async () => {},
+    });
+
+    await expect(adapter.execute(context, command)).rejects.toMatchObject({
+      code: "PERMANENT_FAILURE",
+      retryable: false,
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("honors the gateway's declared retryable:true over the status-based default", async () => {
+    const fetchMock = vi.fn<typeof fetch>();
+    fetchMock
+      .mockResolvedValueOnce(
+        jsonResponse(
+          { error: { code: "TRANSIENT_VALIDATION", message: "retry me", retryable: true } },
+          { status: 400 },
+        ),
+      )
+      .mockResolvedValueOnce(jsonResponse({ commandId: command.commandId, status: "accepted" }));
+    const adapter = new PostizAdapter({
+      baseUrl: "https://postiz.internal",
+      tokenProvider: () => "secret-token",
+      enabled: true,
+      enabledOperations: ["social.post.create"],
+      fetch: fetchMock,
+      sleep: async () => {},
+    });
+
+    await expect(adapter.execute(context, command)).resolves.toMatchObject({ status: "accepted" });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not leak abort listeners on a signal reused across retries", async () => {
+    const controller = new AbortController();
+    const fetchMock = vi.fn<typeof fetch>(async () => errorResponse(503, "UPSTREAM_UNAVAILABLE"));
+    const adapter = new PostizAdapter({
+      baseUrl: "https://postiz.internal",
+      tokenProvider: () => "secret-token",
+      enabled: true,
+      enabledOperations: ["social.post.create"],
+      fetch: fetchMock,
+      maxRetries: 5,
+      sleep: async () => {},
+    });
+
+    await expect(
+      adapter.execute({ ...context, signal: controller.signal }, command),
+    ).rejects.toMatchObject({ code: "UPSTREAM_UNAVAILABLE" });
+
+    // Every one of the 5 backoffs raced an abort listener against sleep;
+    // sleep always won here, so each listener must have been unregistered
+    // rather than left registered on this long-lived signal forever.
+    expect(getEventListeners(controller.signal, "abort")).toHaveLength(0);
   });
 
   it("honors a Retry-After header instead of the default backoff", async () => {

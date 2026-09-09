@@ -273,7 +273,12 @@ export abstract class RestrictedGatewayAdapter implements CodestraConnector {
       retryAfterMs ?? computeBackoffDelayMs(attempt, this.retryBaseDelayMs),
     );
     if (delayMs <= 0 || context.signal?.aborted) return;
-    await Promise.race([this.sleepImplementation(delayMs), waitForAbort(context.signal)]);
+    const abort = waitForAbort(context.signal);
+    try {
+      await Promise.race([this.sleepImplementation(delayMs), abort.promise]);
+    } finally {
+      abort.cancel();
+    }
   }
 
   private async attemptRequest<T extends JsonObject>(
@@ -318,11 +323,19 @@ export abstract class RestrictedGatewayAdapter implements CodestraConnector {
       if (!response.ok) {
         const payload = await parseErrorBody(response);
         const retryAfterMs = parseRetryAfterMs(response.headers.get("retry-after"));
+        // The restricted-gateway contract requires every error body to carry
+        // its own `retryable` boolean (ErrorResponse.error.retryable in
+        // codestra-restricted-gateway.openapi.yaml) -- the gateway knows
+        // more about a given failure than an HTTP status code alone can
+        // say, so its verdict takes priority over our own status-based
+        // guess, which only applies when the body doesn't answer.
+        const declaredRetryable = extractRetryable(payload);
         throw new ConnectorError(
           extractMessage(payload) ?? `Restricted gateway returned HTTP ${response.status}.`,
           extractCode(payload) ?? `PROVIDER_HTTP_${response.status}`,
           {
-            retryable: [408, 425, 429, 500, 502, 503, 504].includes(response.status),
+            retryable:
+              declaredRetryable ?? [408, 425, 429, 500, 502, 503, 504].includes(response.status),
             details: {
               status: response.status,
               ...(retryAfterMs !== undefined ? { retryAfterMs } : {}),
@@ -419,12 +432,23 @@ function computeBackoffDelayMs(attempt: number, baseDelayMs: number): number {
   return Math.floor(exponential / 2 + Math.random() * (exponential / 2));
 }
 
-function waitForAbort(signal: AbortSignal | undefined): Promise<void> {
-  if (!signal) return new Promise(() => {});
-  if (signal.aborted) return Promise.resolve();
-  return new Promise<void>((resolve) => {
-    signal.addEventListener("abort", () => resolve(), { once: true });
+/**
+ * Resolves when `signal` aborts, but -- unlike a plain `{once: true}`
+ * listener -- also unregisters itself if the caller's `Promise.race` settles
+ * the other way first. `signal` is typically a long-lived, per-connection
+ * AbortSignal reused across many retried commands; without this cleanup,
+ * every backoff that finishes without an abort would leave a listener
+ * behind permanently, one per retry.
+ */
+function waitForAbort(signal: AbortSignal | undefined): { promise: Promise<void>; cancel: () => void } {
+  if (!signal) return { promise: new Promise(() => {}), cancel: () => {} };
+  if (signal.aborted) return { promise: Promise.resolve(), cancel: () => {} };
+  let onAbort!: () => void;
+  const promise = new Promise<void>((resolve) => {
+    onAbort = () => resolve();
+    signal.addEventListener("abort", onAbort, { once: true });
   });
+  return { promise, cancel: () => signal.removeEventListener("abort", onAbort) };
 }
 
 /** Parses the HTTP Retry-After header, which is either a delay in whole
@@ -469,6 +493,12 @@ function extractCode(payload: JsonObject): string | undefined {
 
 function extractMessage(payload: JsonObject): string | undefined {
   return isJsonObject(payload.error) && typeof payload.error.message === "string" ? payload.error.message : undefined;
+}
+
+function extractRetryable(payload: JsonObject): boolean | undefined {
+  return isJsonObject(payload.error) && typeof payload.error.retryable === "boolean"
+    ? payload.error.retryable
+    : undefined;
 }
 
 function isJsonObject(value: unknown): value is JsonObject {
