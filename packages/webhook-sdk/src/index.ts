@@ -188,10 +188,12 @@ export class InMemoryWebhookProcessingStore implements WebhookProcessingStore {
   ): Promise<void> {
     const record = this.requireLease(lease);
     validateTimestamp(failedAtEpochSeconds);
+    const failureCode = validateScope(failure.code);
+    const failureMessage = validateFailureMessage(failure.message);
     record.state = "failed";
     record.failedAtEpochSeconds = failedAtEpochSeconds;
-    record.failureCode = validateScope(failure.code);
-    record.failureMessage = validateFailureMessage(failure.message);
+    record.failureCode = failureCode;
+    record.failureMessage = failureMessage;
     delete record.expiresAtEpochSeconds;
     delete record.token;
     delete record.processedAtEpochSeconds;
