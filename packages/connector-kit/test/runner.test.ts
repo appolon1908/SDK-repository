@@ -269,3 +269,37 @@ describe("ConnectorRunner durable idempotency", () => {
     ).rejects.toBeInstanceOf(ConnectorPolicyError);
   });
 });
+
+describe("atomic idempotency transitions", () => {
+  it.each(["dispatch", "complete", "indeterminate"] as const)("preserves state and lease after an invalid %s TTL", async (transition) => {
+    const store = new InMemoryConnectorIdempotencyStore({ now: () => 1_800_000_000 });
+    const scope = "atomic-transition";
+    const begin = await store.begin({ scope, requestHash: "a".repeat(64), commandId: command.commandId, acquiredTtlSeconds: 30 });
+    if (begin.state !== "acquired") throw new Error("expected lease");
+    if (transition !== "dispatch") await store.markDispatched(begin.lease, 30);
+    const before = await store.get(scope);
+    const result: ConnectorCommandResult = { commandId: command.commandId, status: "completed" };
+    const outcome: ConnectorIndeterminateOutcome = { code: "UNKNOWN", message: "Connection lost", occurredAt: command.requestedAt, retryable: false };
+    const apply = (ttl: number) => transition === "dispatch" ? store.markDispatched(begin.lease, ttl)
+      : transition === "complete" ? store.complete(begin.lease, result, ttl)
+      : store.markIndeterminate(begin.lease, outcome, ttl);
+    await expect(apply(0)).rejects.toThrow();
+    expect(await store.get(scope)).toEqual(before);
+    await expect(apply(30)).resolves.toBeUndefined();
+  });
+
+  it.each(["complete", "reconcile"] as const)("preserves recoverable state if %s cannot clone its result", async (transition) => {
+    const store = new InMemoryConnectorIdempotencyStore({ now: () => 1_800_000_000 });
+    const scope = "atomic-clone";
+    const requestHash = "a".repeat(64);
+    const begin = await store.begin({ scope, requestHash, commandId: command.commandId, acquiredTtlSeconds: 30 });
+    if (begin.state !== "acquired") throw new Error("expected lease");
+    await store.markDispatched(begin.lease, 30);
+    const before = await store.get(scope);
+    const result = { commandId: command.commandId, status: "completed", data: { invalid: () => undefined } } as unknown as ConnectorCommandResult;
+    await expect(transition === "complete" ? store.complete(begin.lease, result, 30)
+      : store.resolveIndeterminate({ scope, requestHash, result, completedTtlSeconds: 30 })).rejects.toThrow();
+    expect(await store.get(scope)).toEqual(before);
+    await expect(store.complete(begin.lease, { commandId: command.commandId, status: "completed" }, 30)).resolves.toBeUndefined();
+  });
+});

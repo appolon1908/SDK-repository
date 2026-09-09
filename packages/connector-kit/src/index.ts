@@ -286,8 +286,9 @@ export class InMemoryConnectorIdempotencyStore implements ConnectorIdempotencySt
 
   async markDispatched(lease: ConnectorIdempotencyLease, reviewTtlSeconds: number): Promise<void> {
     const record = this.requireLease(lease, ["acquired"]);
+    const expiresAtEpochSeconds = this.now() + positiveInteger(reviewTtlSeconds, "reviewTtlSeconds");
     record.state = "dispatched";
-    record.expiresAtEpochSeconds = this.now() + positiveInteger(reviewTtlSeconds, "reviewTtlSeconds");
+    record.expiresAtEpochSeconds = expiresAtEpochSeconds;
   }
 
   async complete(
@@ -296,11 +297,13 @@ export class InMemoryConnectorIdempotencyStore implements ConnectorIdempotencySt
     completedTtlSeconds: number,
   ): Promise<void> {
     const record = this.requireLease(lease, ["dispatched", "indeterminate"]);
+    const expiresAtEpochSeconds = this.now() + positiveInteger(completedTtlSeconds, "completedTtlSeconds");
+    const storedResult = structuredClone(result);
     record.state = "completed";
-    record.result = structuredClone(result);
+    record.result = storedResult;
     delete record.outcome;
     delete record.token;
-    record.expiresAtEpochSeconds = this.now() + positiveInteger(completedTtlSeconds, "completedTtlSeconds");
+    record.expiresAtEpochSeconds = expiresAtEpochSeconds;
   }
 
   async markIndeterminate(
@@ -309,9 +312,11 @@ export class InMemoryConnectorIdempotencyStore implements ConnectorIdempotencySt
     reviewTtlSeconds: number,
   ): Promise<void> {
     const record = this.requireLease(lease, ["dispatched", "indeterminate"]);
+    const expiresAtEpochSeconds = this.now() + positiveInteger(reviewTtlSeconds, "reviewTtlSeconds");
+    const storedOutcome = structuredClone(outcome);
     record.state = "indeterminate";
-    record.outcome = structuredClone(outcome);
-    record.expiresAtEpochSeconds = this.now() + positiveInteger(reviewTtlSeconds, "reviewTtlSeconds");
+    record.outcome = storedOutcome;
+    record.expiresAtEpochSeconds = expiresAtEpochSeconds;
   }
 
   async releaseBeforeDispatch(lease: ConnectorIdempotencyLease): Promise<void> {
@@ -347,11 +352,13 @@ export class InMemoryConnectorIdempotencyStore implements ConnectorIdempotencySt
         { retryable: false, details: { scope: input.scope, state: record.state } },
       );
     }
+    const expiresAtEpochSeconds = this.now() + input.completedTtlSeconds;
+    const storedResult = structuredClone(input.result);
     record.state = "completed";
-    record.result = structuredClone(input.result);
+    record.result = storedResult;
     delete record.outcome;
     delete record.token;
-    record.expiresAtEpochSeconds = this.now() + input.completedTtlSeconds;
+    record.expiresAtEpochSeconds = expiresAtEpochSeconds;
   }
 
   async get(scope: string): Promise<ConnectorIdempotencySnapshot | undefined> {
