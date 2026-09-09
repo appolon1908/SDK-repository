@@ -58,6 +58,11 @@ function adapter(overrides: Partial<RestrictedGatewayAdapterConfig> = {}) {
     enabled: true,
     enabledOperations: ["social.post.create"],
     timeoutMs: 300,
+    // This file exercises real transport (redirects, resets, timeouts), not
+    // retry/backoff semantics -- those are covered against a mocked fetch in
+    // adapters.test.ts, where delays can be skipped deterministically.
+    // Retrying here would only make every failure-path test slower.
+    maxRetries: 0,
     ...overrides,
   });
 }
