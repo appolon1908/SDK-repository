@@ -317,7 +317,7 @@ requireText(workflow, [
   'Build exact-head candidate packages',
   'sha256sum orbit/build/*.tgz',
   'SOURCE_COMMIT',
-  'actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02',
+  'actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a',
   'test "$(find orbit/build -maxdepth 1 -name \'*.tgz\' | wc -l)" -eq 9',
 ], 'Orbit workflow');
 
