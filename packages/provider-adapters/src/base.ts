@@ -35,6 +35,14 @@ export interface RestrictedGatewayAdapterConfig {
   fetch?: typeof globalThis.fetch;
   routes?: Partial<RestrictedGatewayRoutes>;
   webhookNormalizer?: WebhookNormalizer;
+  /** Retries attempted after the initial try (0 disables retrying). Default 2. */
+  maxRetries?: number;
+  /** Base of the jittered exponential backoff between retries, in ms. Default 100. */
+  retryBaseDelayMs?: number;
+  /** Upper bound on any single backoff delay, including a capped Retry-After. Default 2000. */
+  retryMaxDelayMs?: number;
+  /** Injectable delay for tests; defaults to a real setTimeout-based wait. */
+  sleep?: (ms: number) => Promise<void>;
 }
 
 export const DEFAULT_RESTRICTED_GATEWAY_ROUTES: RestrictedGatewayRoutes = {
@@ -55,6 +63,10 @@ export abstract class RestrictedGatewayAdapter implements CodestraConnector {
   private readonly fetchImplementation: typeof globalThis.fetch;
   private readonly routes: RestrictedGatewayRoutes;
   private readonly webhookNormalizer: WebhookNormalizer | undefined;
+  private readonly maxRetries: number;
+  private readonly retryBaseDelayMs: number;
+  private readonly retryMaxDelayMs: number;
+  private readonly sleepImplementation: (ms: number) => Promise<void>;
 
   protected constructor(descriptor: ConnectorManifest, config: RestrictedGatewayAdapterConfig) {
     this.descriptor = descriptor;
@@ -67,6 +79,11 @@ export abstract class RestrictedGatewayAdapter implements CodestraConnector {
     this.fetchImplementation = config.fetch ?? globalThis.fetch;
     this.routes = { ...DEFAULT_RESTRICTED_GATEWAY_ROUTES, ...config.routes };
     this.webhookNormalizer = config.webhookNormalizer;
+    this.maxRetries = nonNegativeInteger(config.maxRetries ?? 2, "maxRetries");
+    this.retryBaseDelayMs = positiveInteger(config.retryBaseDelayMs ?? 100, "retryBaseDelayMs");
+    this.retryMaxDelayMs = positiveInteger(config.retryMaxDelayMs ?? 2_000, "retryMaxDelayMs");
+    this.sleepImplementation =
+      config.sleep ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
 
     if (typeof this.fetchImplementation !== "function") {
       throw new TypeError("A Fetch API implementation is required.");
@@ -216,7 +233,50 @@ export abstract class RestrictedGatewayAdapter implements CodestraConnector {
     }
   }
 
+  /**
+   * Every call site in this class is safe to retry: the health check is a
+   * GET, reconcile/reconcileCommand are read-only queries even though they
+   * ride on POST, and execute() only reaches here after requiring an
+   * idempotency key for mutating operations (see the check in execute()).
+   * So retrying on a classified-retryable failure never risks a duplicate
+   * side effect, and no per-call "is this safe to repeat" flag is needed.
+   */
   private async request<T extends JsonObject>(
+    context: ConnectorContext,
+    method: "GET" | "POST",
+    path: string,
+    body?: JsonObject,
+    idempotencyKey?: string,
+  ): Promise<T> {
+    for (let attempt = 0; ; attempt += 1) {
+      try {
+        return await this.attemptRequest<T>(context, method, path, body, idempotencyKey);
+      } catch (error) {
+        if (
+          !(error instanceof ConnectorError) ||
+          !error.retryable ||
+          attempt >= this.maxRetries ||
+          context.signal?.aborted
+        ) {
+          throw error;
+        }
+        await this.delayBeforeRetry(attempt, error, context);
+      }
+    }
+  }
+
+  private async delayBeforeRetry(attempt: number, error: ConnectorError, context: ConnectorContext): Promise<void> {
+    const details = error.details;
+    const retryAfterMs = typeof details?.retryAfterMs === "number" ? details.retryAfterMs : undefined;
+    const delayMs = Math.min(
+      this.retryMaxDelayMs,
+      retryAfterMs ?? computeBackoffDelayMs(attempt, this.retryBaseDelayMs),
+    );
+    if (delayMs <= 0 || context.signal?.aborted) return;
+    await Promise.race([this.sleepImplementation(delayMs), waitForAbort(context.signal)]);
+  }
+
+  private async attemptRequest<T extends JsonObject>(
     context: ConnectorContext,
     method: "GET" | "POST",
     path: string,
@@ -257,12 +317,16 @@ export abstract class RestrictedGatewayAdapter implements CodestraConnector {
       const response = await this.fetchImplementation(resolvePath(this.baseUrl, path), init);
       if (!response.ok) {
         const payload = await parseErrorBody(response);
+        const retryAfterMs = parseRetryAfterMs(response.headers.get("retry-after"));
         throw new ConnectorError(
           extractMessage(payload) ?? `Restricted gateway returned HTTP ${response.status}.`,
           extractCode(payload) ?? `PROVIDER_HTTP_${response.status}`,
           {
             retryable: [408, 425, 429, 500, 502, 503, 504].includes(response.status),
-            details: { status: response.status },
+            details: {
+              status: response.status,
+              ...(retryAfterMs !== undefined ? { retryAfterMs } : {}),
+            },
           },
         );
       }
@@ -341,6 +405,39 @@ function requireHeader(value: string, name: string): string {
 function positiveInteger(value: number, name: string): number {
   if (!Number.isSafeInteger(value) || value <= 0) throw new TypeError(`${name} must be a positive integer.`);
   return value;
+}
+
+function nonNegativeInteger(value: number, name: string): number {
+  if (!Number.isSafeInteger(value) || value < 0) throw new TypeError(`${name} must be a non-negative integer.`);
+  return value;
+}
+
+/** Equal-jitter exponential backoff: half fixed, half random, so a burst of
+ * simultaneously-retrying callers doesn't converge on the same instant. */
+function computeBackoffDelayMs(attempt: number, baseDelayMs: number): number {
+  const exponential = baseDelayMs * 2 ** attempt;
+  return Math.floor(exponential / 2 + Math.random() * (exponential / 2));
+}
+
+function waitForAbort(signal: AbortSignal | undefined): Promise<void> {
+  if (!signal) return new Promise(() => {});
+  if (signal.aborted) return Promise.resolve();
+  return new Promise<void>((resolve) => {
+    signal.addEventListener("abort", () => resolve(), { once: true });
+  });
+}
+
+/** Parses the HTTP Retry-After header, which is either a delay in whole
+ * seconds or an HTTP-date. Returns undefined for anything else so callers
+ * fall back to their own backoff instead of trusting a malformed header. */
+function parseRetryAfterMs(headerValue: string | null): number | undefined {
+  if (headerValue === null) return undefined;
+  if (/^\d+$/.test(headerValue.trim())) {
+    return Number.parseInt(headerValue, 10) * 1000;
+  }
+  const dateMs = Date.parse(headerValue);
+  if (!Number.isFinite(dateMs)) return undefined;
+  return Math.max(0, dateMs - Date.now());
 }
 
 async function parseSuccessJson(response: Response): Promise<JsonObject> {
