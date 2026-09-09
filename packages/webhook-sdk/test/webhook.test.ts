@@ -199,3 +199,20 @@ describe("webhook verification", () => {
     ).rejects.toMatchObject({ code: "SCOPE_EVENT_MISMATCH" });
   });
 });
+
+describe("atomic webhook failure transitions", () => {
+  it.each([
+    { code: "", message: "Handler failed" },
+    { code: "HANDLER_FAILED", message: "" },
+  ])("preserves the lease when failure metadata is invalid: %j", async (failure) => {
+    const store = new InMemoryWebhookProcessingStore({ now: () => timestamp });
+    const scope = "tenant:endpoint:current:event";
+    const claimed = await store.claimProcessing(scope, timestamp + 30);
+    if (claimed.state !== "claimed") throw new Error("expected claim");
+    const before = await store.get(scope);
+    await expect(store.markFailed(claimed.lease, timestamp + 1, failure)).rejects.toBeInstanceOf(WebhookVerificationError);
+    expect(await store.get(scope)).toEqual(before);
+    await store.markProcessed(claimed.lease, timestamp + 2);
+    expect(await store.get(scope)).toMatchObject({ state: "processed" });
+  });
+});
