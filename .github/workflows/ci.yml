@@ -88,7 +88,7 @@ jobs:
           cache-dependency-path: pnpm-lock.yaml
       - name: Install exact dependencies
         run: pnpm install --frozen-lockfile
-      - name: Reject production dependency vulnerabilities rated High or Critical
+      - name: Reject production dependency vulnerabilities rated Moderate or above
         run: pnpm security:audit
       - name: Validate canonical contracts semantically
         run: pnpm contracts:validate

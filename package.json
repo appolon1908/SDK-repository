@@ -26,13 +26,14 @@
     "contracts:drift:negative": "node scripts/test-contract-drift-detector.mjs",
     "workflows:validate": "node scripts/validate-workflow-policy.mjs",
     "pacts:validate": "node scripts/validate-pacts.mjs",
-    "security:audit": "pnpm audit --prod --audit-level high"
+    "security:audit": "pnpm audit --prod --audit-level moderate"
   },
   "pnpm": {
     "overrides": {
       "deepmerge-ts": "8.0.2",
       "postcss": "8.5.26",
-      "mysql2": "3.22.0"
+      "mysql2": "3.23.1",
+      "qs": "6.16.0"
     }
   },
   "devDependencies": {
