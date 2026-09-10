@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "repository": "appolon1908-hue/SDK-repository",
-  "design_group": "Governance/shared source",
-  "monitoring_profile": "release-and-dependency",
+  "design_group": "Runtime and shared source",
+  "monitoring_profile": "runtime-or-website",
   "controller_repository": "appolon1908-hue/Middleware-",
   "design_url": "https://github.com/appolon1908-hue/Infustruction-repo/blob/afeea11b86d296874ec12ce6e8615400240bc72f/INTEGRATED-MONITORING-DESIGN.md",
   "api_contract_url": "https://raw.githubusercontent.com/appolon1908-hue/Middleware-/cedaa23b89f84f365ae6789413411c3f01516952/contracts/observability/integrated-monitoring.openapi.json",
@@ -45,5 +45,7 @@
     "private_authentication",
     "alert_delivery",
     "restore_and_rollback"
-  ]
+  ],
+  "repository_id": 1349042079,
+  "service_mapping_status": "awaiting-verified-release-mapping"
 }

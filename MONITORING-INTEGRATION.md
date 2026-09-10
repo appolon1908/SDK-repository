@@ -1,6 +1,6 @@
 # Monitoring integration — SDK-repository
 
-This repository is included in the shared design for **63 repositories and 17 monitoring components**. Its assigned profile is `release-and-dependency`. Runtime coverage is **unverified** until release and telemetry evidence are recorded.
+This repository is included in the shared design for **63 repositories and 17 monitoring components**. Its assigned profile is `runtime-or-website`. Runtime coverage is **unverified** until release and telemetry evidence are recorded.
 
 - [Complete architecture and rollout design](https://github.com/appolon1908-hue/Infustruction-repo/blob/afeea11b86d296874ec12ce6e8615400240bc72f/INTEGRATED-MONITORING-DESIGN.md)
 - [36-operation Middleware implementation](https://github.com/appolon1908-hue/Middleware-/tree/cedaa23b89f84f365ae6789413411c3f01516952/app/monitoring)
@@ -16,3 +16,5 @@ The release controller mounts reviewed configuration and artifacts in Middleware
 Keep native backends private. Send UI reads through authenticated Middleware/BFF routes, never browser-held backend credentials. Use release-mounted secrets, approved targets/query templates, tenant and campaign scopes, and structured redacted telemetry. Service registration, green CI and successful ingestion are distinct from verified production coverage.
 
 Acceptance requires the exact source CI result, approved immutable release, registered service/endpoint contracts, fresh telemetry, private authentication, a synthetic alert and recovery evidence. Production activation remains separate. This commit adds the repository's design/onboarding record; it does not instrument or deploy its application.
+
+This repository contains deployable units as well as source/configuration. Runtime evidence requirements apply to those units. Empty `service_ids` explicitly blocks complete runtime onboarding until an approved release maps each unit to tenant, environment and deployment identity; it is not a source-only exemption.
