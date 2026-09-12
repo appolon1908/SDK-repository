@@ -1,21 +1,10 @@
 import type { ISODateTime, JsonObject, UUID } from "./index.js";
 
 export type KyqraCrawlerEventType =
-  | "kyqra.job.completed.v1"
-  | "kyqra.job.failed.v1"
-  | "kyqra.result.review-required.v1"
-  | "kyqra.progress.v1";
-
-export interface KyqraCrawlerProvenance {
-  source_url: string;
-  capture_method: "http" | "browser" | "api" | "document";
-  fetched_at?: ISODateTime;
-  content_type?: string | null;
-  content_sha256?: string | null;
-  locator?: string;
-  extractor?: string;
-  [key: string]: string | undefined | null;
-}
+  | "codestra.crawler.job.completed"
+  | "codestra.crawler.job.failed"
+  | "codestra.crawler.result.review_required"
+  | "codestra.crawler.job.progress";
 
 export interface KyqraCrawlerEvidence {
   kind: string;
@@ -42,48 +31,28 @@ export interface KyqraCrawlerProgress {
   failed: number;
 }
 
-export interface KyqraCrawlerJobCompletedPayload {
-  status: "completed";
+export interface KyqraCrawlerEventPayload extends JsonObject {
+  job_id: UUID;
+  status: "queued" | "running" | "completed" | "failed" | "cancelled" | "review_required";
   progress: KyqraCrawlerProgress;
   results: KyqraCrawlerResult[];
+  error?: string | null;
 }
 
-export interface KyqraCrawlerJobFailedPayload {
-  status: "failed";
-  error: string;
-  progress: KyqraCrawlerProgress;
-}
-
-export interface KyqraCrawlerReviewRequiredPayload {
-  status: "review_required";
-  result: KyqraCrawlerResult;
-}
-
-export interface KyqraCrawlerProgressPayload {
-  status: "queued" | "running" | "completed" | "failed" | "cancelled";
-  progress: KyqraCrawlerProgress;
-}
-
-export type KyqraCrawlerEventPayload =
-  | KyqraCrawlerJobCompletedPayload
-  | KyqraCrawlerJobFailedPayload
-  | KyqraCrawlerReviewRequiredPayload
-  | KyqraCrawlerProgressPayload;
-
-export interface KyqraCrawlerEventEnvelope<
-  TPayload extends KyqraCrawlerEventPayload = KyqraCrawlerEventPayload,
-> {
-  event_id: UUID;
+export interface KyqraCrawlerEventEnvelope {
+  event_id: string;
   event_type: KyqraCrawlerEventType;
-  event_version: "1";
-  schema_version: "1.0";
-  source: "kyqra-crawler";
+  event_version: "1.0";
   occurred_at: ISODateTime;
+  received_at: ISODateTime;
+  source: "kyqra-gateway";
   tenant_id: string;
+  customer_id?: string | null;
   correlation_id: string;
-  job_id: UUID;
+  causation_id: string;
   idempotency_key: string;
-  payload: TPayload;
+  payload: KyqraCrawlerEventPayload;
+  metadata: JsonObject;
 }
 
 export interface KyqraCrawlerSourceProfile {
