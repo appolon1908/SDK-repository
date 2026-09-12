@@ -1,0 +1,54 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.codestra.co/kyqra/crawler-source.v1.schema.json",
+  "title": "Kyqra crawler source profile v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["source_id", "name", "base_url", "enabled", "crawl", "discovery", "extraction", "privacy_policy"],
+  "properties": {
+    "source_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "name": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "base_url": { "type": "string", "format": "uri", "pattern": "^https://" },
+    "enabled": { "type": "boolean" },
+    "crawl": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "max_pages", "max_depth", "requests_per_second", "respect_robots_txt", "browser_mode"],
+      "properties": {
+        "mode": { "enum": ["single", "domain", "list", "discovery"] },
+        "schedule": { "type": ["string", "null"], "maxLength": 128 },
+        "max_pages": { "type": "integer", "minimum": 1, "maximum": 100000 },
+        "max_depth": { "type": "integer", "minimum": 0, "maximum": 20 },
+        "requests_per_second": { "type": "number", "exclusiveMinimum": 0, "maximum": 100 },
+        "respect_robots_txt": { "const": true },
+        "browser_mode": { "enum": ["auto", "http", "playwright"] }
+      }
+    },
+    "discovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sitemap", "rss", "pagination"],
+      "properties": {
+        "sitemap": { "type": "boolean" },
+        "rss": { "type": "boolean" },
+        "pagination": { "type": "boolean" }
+      }
+    },
+    "extraction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "schema_version"],
+      "properties": {
+        "schema": { "type": "string", "minLength": 1, "maxLength": 128 },
+        "schema_version": { "type": "integer", "minimum": 1 }
+      }
+    },
+    "allowed_content_types": {
+      "type": "array",
+      "maxItems": 64,
+      "items": { "type": "string", "minLength": 1, "maxLength": 256 }
+    },
+    "privacy_policy": { "enum": ["public_business_only", "authorized_private", "restricted"] }
+  }
+}
+

@@ -1,0 +1,149 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.codestra.co/kyqra/crawler-event-envelope.v1.schema.json",
+  "title": "Kyqra crawler event envelope v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "event_type",
+    "event_version",
+    "schema_version",
+    "source",
+    "occurred_at",
+    "tenant_id",
+    "correlation_id",
+    "job_id",
+    "idempotency_key",
+    "payload"
+  ],
+  "properties": {
+    "event_id": { "type": "string", "format": "uuid" },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "kyqra.job.completed.v1",
+        "kyqra.job.failed.v1",
+        "kyqra.result.review-required.v1",
+        "kyqra.progress.v1"
+      ]
+    },
+    "event_version": { "const": "1" },
+    "schema_version": { "const": "1.0" },
+    "source": { "const": "kyqra-crawler" },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "correlation_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+    "job_id": { "type": "string", "format": "uuid" },
+    "idempotency_key": { "type": "string", "minLength": 16, "maxLength": 256 },
+    "payload": {
+      "oneOf": [
+        { "$ref": "#/$defs/jobCompletedPayload" },
+        { "$ref": "#/$defs/jobFailedPayload" },
+        { "$ref": "#/$defs/reviewRequiredPayload" },
+        { "$ref": "#/$defs/progressPayload" }
+      ]
+    }
+  },
+  "$defs": {
+    "provenance": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "maxLength": 4096 }
+    },
+    "result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "record_id",
+        "source_url",
+        "data",
+        "provenance",
+        "review_required"
+      ],
+      "properties": {
+        "record_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+        "source_url": { "type": "string", "format": "uri" },
+        "data": { "type": "object" },
+        "provenance": { "$ref": "#/$defs/provenance" },
+        "review_required": { "type": "boolean" },
+        "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "capture_method": {
+          "type": "string",
+          "enum": ["http", "browser", "api", "document"]
+        },
+        "content_type": { "type": ["string", "null"], "maxLength": 256 },
+        "content_sha256": {
+          "type": ["string", "null"],
+          "pattern": "^[a-f0-9]{64}$"
+        },
+        "evidence": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["kind", "locator"],
+            "properties": {
+              "kind": { "type": "string", "minLength": 1, "maxLength": 64 },
+              "locator": { "type": "string", "minLength": 1, "maxLength": 4096 },
+              "quote": { "type": "string", "maxLength": 4096 }
+            }
+          }
+        }
+      }
+    },
+    "progress": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["processed", "records", "failed"],
+      "properties": {
+        "processed": { "type": "integer", "minimum": 0 },
+        "records": { "type": "integer", "minimum": 0 },
+        "failed": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "jobCompletedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "progress", "results"],
+      "properties": {
+        "status": { "const": "completed" },
+        "progress": { "$ref": "#/$defs/progress" },
+        "results": {
+          "type": "array",
+          "maxItems": 10000,
+          "items": { "$ref": "#/$defs/result" }
+        }
+      }
+    },
+    "jobFailedPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "error", "progress"],
+      "properties": {
+        "status": { "const": "failed" },
+        "error": { "type": "string", "minLength": 1, "maxLength": 2000 },
+        "progress": { "$ref": "#/$defs/progress" }
+      }
+    },
+    "reviewRequiredPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "result"],
+      "properties": {
+        "status": { "const": "review_required" },
+        "result": { "$ref": "#/$defs/result" }
+      }
+    },
+    "progressPayload": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "progress"],
+      "properties": {
+        "status": { "enum": ["queued", "running", "completed", "failed", "cancelled"] },
+        "progress": { "$ref": "#/$defs/progress" }
+      }
+    }
+  }
+}
+
