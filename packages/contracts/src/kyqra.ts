@@ -31,7 +31,7 @@ export interface KyqraCrawlerProgress {
   failed: number;
 }
 
-export interface KyqraCrawlerEventPayload extends JsonObject {
+export interface KyqraCrawlerEventPayload {
   job_id: UUID;
   status: "queued" | "running" | "completed" | "failed" | "cancelled" | "review_required";
   progress: KyqraCrawlerProgress;
