@@ -35,6 +35,7 @@ export interface EventCatalogueMessage {
 export interface EventCatalogueChannel {
   key: string;
   address: string;
+  exposure: "public" | "internal";
   messages: readonly EventCatalogueMessage[];
 }
 
@@ -48,6 +49,7 @@ interface RawDocument {
   };
 }
 interface RawChannel {
+  "x-codestra-exposure"?: "internal";
   address?: string;
   messages?: Record<string, { $ref?: string }>;
 }
@@ -62,6 +64,7 @@ interface RawSchema {
   required?: string[];
   $ref?: string;
   const?: string;
+  pattern?: string;
 }
 
 export function loadEventCatalogue(): EventCatalogueChannel[] {
@@ -77,12 +80,15 @@ export function loadEventCatalogue(): EventCatalogueChannel[] {
       const rawMessage = messages[messageName];
       return resolveMessage(messageName, rawMessage, schemas);
     });
-    return { key, address: channel.address ?? key, messages: channelMessages };
+    return { key, address: channel.address ?? key, messages: channelMessages,
+      exposure: channel["x-codestra-exposure"] ?? "public" };
   });
 }
 
 export function listKnownEventTypes(): string[] {
-  return loadEventCatalogue().flatMap((channel) => channel.messages.map((message) => message.cloudEventType));
+  // Internal business streams are not customer webhook subscription types.
+  return loadEventCatalogue().filter((channel) => channel.exposure === "public")
+    .flatMap((channel) => channel.messages.map((message) => message.cloudEventType));
 }
 
 function resolveMessage(
@@ -93,7 +99,8 @@ function resolveMessage(
   const objectPart = message?.payload?.allOf?.find((part) => part.type === "object");
   if (objectPart) {
     const typeProperty = objectPart.properties?.type ?? objectPart.properties?.event_type;
-    const cloudEventType = typeof typeProperty?.const === "string" ? typeProperty.const : "unknown";
+    const cloudEventType = typeof typeProperty?.const === "string" ? typeProperty.const
+    : typeProperty?.enum?.join(" | ") ?? typeProperty?.pattern ?? "unknown";
     const dataSchema = resolveSchema(objectPart.properties?.data, schemas);
     return {
       name,
@@ -105,7 +112,8 @@ function resolveMessage(
 
   const payloadSchema = resolveSchema(message?.payload, schemas);
   const typeProperty = payloadSchema?.properties?.type ?? payloadSchema?.properties?.event_type;
-  const cloudEventType = typeof typeProperty?.const === "string" ? typeProperty.const : "unknown";
+  const cloudEventType = typeof typeProperty?.const === "string" ? typeProperty.const
+    : typeProperty?.enum?.join(" | ") ?? typeProperty?.pattern ?? "unknown";
   return {
     name,
     title: message?.title ?? name,

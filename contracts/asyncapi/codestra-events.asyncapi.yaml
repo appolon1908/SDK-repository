@@ -59,21 +59,25 @@ channels:
         $ref: '#/components/messages/SmsReceived'
   integration:
     address: codestra.integration.events
+    x-codestra-exposure: internal
     messages:
       event:
         $ref: '#/components/messages/integration'
   klyrow:
     address: codestra.klyrow.events
+    x-codestra-exposure: internal
     messages:
       event:
         $ref: '#/components/messages/klyrow'
   telnexa:
     address: codestra.telnexa.events
+    x-codestra-exposure: internal
     messages:
       event:
         $ref: '#/components/messages/telnexa'
   vicidial:
     address: codestra.vicidial.events
+    x-codestra-exposure: internal
     messages:
       event:
         $ref: '#/components/messages/vicidial'
