@@ -5,6 +5,7 @@ import { basename, join } from "node:path";
 import { parse } from "yaml";
 
 const definitions = [
+  { kind: "openapi", path: "contracts/openapi/codestra-components.openapi.yaml", expectedVersion: "3.1.0" },
   {
     kind: "openapi",
     path: "contracts/middleware-runtime-current.openapi.json",

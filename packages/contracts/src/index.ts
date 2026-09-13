@@ -1,4 +1,5 @@
 export const CONTRACT_VERSION = "0.1.0" as const;
+export type { BusinessEventEnvelope, KlyrowDailyUsage, KlyrowDailyUsageEvent } from "./business-events.js";
 
 export type UUID = string;
 export type ISODateTime = string;
