@@ -428,8 +428,8 @@ importers:
         specifier: 5.12.3
         version: 5.12.3
       jose:
-        specifier: 6.2.11
-        version: 6.2.11
+        specifier: 6.2.12
+        version: 6.2.12
       pino:
         specifier: 10.3.1
         version: 10.3.1
@@ -2305,8 +2305,8 @@ packages:
   jju@1.4.0:
     resolution: {integrity: sha512-8wb9Yw966OSxApiCt0K3yNJL8pnNeIv+OEq2YMidz4FKP6nonSRoOXc80iXY4JaN2FC11B9qsNmDsm+ZOfMROA==}
 
-  jose@6.2.11:
-    resolution: {integrity: sha512-A5NPn7g8EAzGU3IzRs+Yiq8K5n3ypYS75M5+KKiVHdUexfpWK1kP4ZMq7QnTGDoMj6TJ1dtcEJjW60yZDXS4hg==}
+  jose@6.2.12:
+    resolution: {integrity: sha512-9NiFmJEex0sy2Dk58j2UGBSHgUs2ypF9eZSu4L6vjOX3Dp96Sw1F3uL+H+D1sx02jZZdzUT0HgvCy59CuvXcWw==}
 
   joycon@3.1.1:
     resolution: {integrity: sha512-34wB/Y7MW7bzjKRjUKTa46I2Z7eV62Rkhva+KkopW7Qvv/OSWBqvkSY7vusOPrNuZcUG3tApvdVgNB8POj3SPw==}
@@ -4942,7 +4942,7 @@ snapshots:
 
   jju@1.4.0: {}
 
-  jose@6.2.11: {}
+  jose@6.2.12: {}
 
   joycon@3.1.1: {}
 
