@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://schemas.codestra.co/kyqra/crawler-event-envelope.v1.schema.json",
+  "title": "Kyqra crawler event envelope v1",
+  "description": "Kyqra payloads carried in the Codestra canonical event envelope.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "event_id",
+    "event_type",
+    "event_version",
+    "occurred_at",
+    "received_at",
+    "source",
+    "tenant_id",
+    "correlation_id",
+    "causation_id",
+    "idempotency_key",
+    "payload",
+    "metadata"
+  ],
+  "properties": {
+    "event_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "event_type": {
+      "type": "string",
+      "enum": [
+        "codestra.crawler.job.completed",
+        "codestra.crawler.job.failed",
+        "codestra.crawler.result.review_required",
+        "codestra.crawler.job.progress"
+      ]
+    },
+    "event_version": { "const": "1.0" },
+    "occurred_at": { "type": "string", "format": "date-time" },
+    "received_at": { "type": "string", "format": "date-time" },
+    "source": { "const": "kyqra-gateway" },
+    "tenant_id": { "type": "string", "minLength": 1, "maxLength": 128 },
+    "customer_id": { "type": ["string", "null"], "minLength": 1, "maxLength": 128 },
+    "correlation_id": { "type": "string", "minLength": 1, "maxLength": 180 },
+    "causation_id": { "type": "string", "minLength": 1, "maxLength": 180 },
+    "idempotency_key": { "type": "string", "minLength": 8, "maxLength": 180 },
+    "payload": {
+      "type": "object",
+      "required": ["job_id", "status", "results", "progress"],
+      "properties": {
+        "job_id": { "type": "string", "format": "uuid" },
+        "status": {
+          "enum": ["queued", "running", "completed", "failed", "cancelled", "review_required"]
+        },
+        "error": { "type": ["string", "null"], "maxLength": 2000 },
+        "progress": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["processed", "records", "failed"],
+          "properties": {
+            "processed": { "type": "integer", "minimum": 0 },
+            "records": { "type": "integer", "minimum": 0 },
+            "failed": { "type": "integer", "minimum": 0 }
+          }
+        },
+        "results": {
+          "type": "array",
+          "maxItems": 10000,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "record_id",
+              "source_url",
+              "data",
+              "provenance",
+              "review_required"
+            ],
+            "properties": {
+              "record_id": { "type": "string", "minLength": 1, "maxLength": 256 },
+              "source_url": { "type": "string", "format": "uri" },
+              "data": { "type": "object" },
+              "provenance": {
+                "type": "object",
+                "additionalProperties": { "type": "string", "maxLength": 4096 }
+              },
+              "review_required": { "type": "boolean" },
+              "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+              "capture_method": {
+                "type": "string",
+                "enum": ["http", "browser", "api", "document"]
+              },
+              "content_type": { "type": ["string", "null"], "maxLength": 256 },
+              "content_sha256": {
+                "type": ["string", "null"],
+                "pattern": "^[a-f0-9]{64}$"
+              },
+              "evidence": {
+                "type": "array",
+                "maxItems": 100,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["kind", "locator"],
+                  "properties": {
+                    "kind": { "type": "string", "minLength": 1, "maxLength": 64 },
+                    "locator": { "type": "string", "minLength": 1, "maxLength": 4096 },
+                    "quote": { "type": "string", "maxLength": 4096 }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "metadata": {
+      "type": "object",
+      "maxProperties": 64
+    }
+  }
+}
