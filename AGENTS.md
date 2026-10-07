@@ -1,105 +1,81 @@
-# Repository memory
+# Codestra Agent Governance Standard
 
-This file records the stable working context for maintainers and automated coding agents. Read it before changing contracts, SDKs, connectors, workflows, or optional gateway services.
+Every task belongs to Product → Section → Subsection → Atomic Task.
 
-## Repository purpose
+Valid promotion path only:
 
-`SDK-repository` is a contract-first SDK and connector monorepo. It is **not** the Codestra Middleware API server and it does not contain the product-local Postiz, Odoo, Klyrow, Telnexa, or VICIdial gateway implementations.
+atomic task → subsection branch → section branch → development → testing → staging → production
 
-The authority path is:
+No other promotion path is accepted.
 
-```text
-Application -> Codestra SDK -> Kong -> Codestra Middleware -> provider adapter -> product-local restricted gateway
-```
+## Ownership and leases
 
-Codestra Middleware remains the only cross-system write authority. This repository must not introduce a direct frontend, n8n, SDK, Svix, Camel, or provider-to-provider write path.
+Each active subsection has exactly one implementation owner. Review, test, certification, and investigation agents may assist but must not independently edit the same implementation scope unless explicitly assigned.
 
-## Audited baseline
+Allowed states: NOT_STARTED, CLAIMED, IN_PROGRESS, BLOCKED, REVIEW, COMPLETE, CERTIFIED.
 
-The full stacked implementation audited on 2026-08-28 UTC is:
+Abandoned leases may be reclaimed only after the configured heartbeat timeout and worktree inspection.
 
-```text
-branch: optional/10-camel-protocol-gateway
-commit: 91a2ae5a2dbd8ac8c8b432c47fbdd1abde34e3a4
-```
+## Mandatory pre-work synchronization
 
-The API audit is maintained in [`docs/API_AUDIT_REPORT.md`](docs/API_AUDIT_REPORT.md).
+Before editing: fetch/prune origin; verify workstation and parent branch; record HEAD SHA; verify clean tree; record ahead/behind; synchronize safely from parent; run preflight; verify production-effect gates remain disabled.
 
-## Canonical API and event contracts
+Stop on unexplained local changes, divergence, invalidated base assumptions, conflicts, missing required dependencies/credentials, or uncertain safety. Never overwrite unknown local work.
 
-- Public OpenAPI: `contracts/openapi/codestra-public.openapi.yaml`
-- Enterprise connector OpenAPI: `contracts/openapi/codestra-enterprise.openapi.yaml`
-- AsyncAPI catalogue: `contracts/asyncapi/codestra-events.asyncapi.yaml`
-- Shared event and error schemas: `contracts/schemas/**`
-- Handwritten TypeScript contract types: `packages/contracts/src/index.ts`
+## Atomic implementation
 
-Contract source files are authoritative only after semantic OpenAPI, AsyncAPI, and JSON Schema validation passes. File-presence or YAML-prefix checks are not sufficient evidence that a contract is valid.
+Every atomic task includes applicable implementation, tests, error handling, contracts, documentation, migrations, observability, and security review. Do not combine unrelated changes.
 
-## Implementation entry points
+## Code quality
 
-- Public TypeScript API client: `packages/social-sdk/src/client.ts`
-- Webhook signing and verification: `packages/webhook-sdk/src/index.ts`
-- Connector execution boundary: `packages/connector-kit/src/index.ts`
-- Restricted gateway transport: `packages/provider-adapters/src/base.ts`
-- Product adapter manifests: `packages/provider-adapters/src/{postiz,odoo,klyrow,telnexa,vicidial}.ts`
-- n8n public API actions: `integrations/n8n-nodes/src/nodes/Codestra/Codestra.node.ts`
-- n8n internal event trigger: `integrations/n8n-nodes/src/nodes/CodestraInternalTrigger/CodestraInternalTrigger.node.ts`
-- Optional Svix handoff: `packages/svix-delivery/src/index.ts`
-- Optional Camel gateway: `services/camel-protocol-gateway/src/main/java/co/codestra/gateway/**`
+Completion is prohibited with placeholder code, TODO-as-implementation, dead/duplicate code, temporary bypasses, broad exception swallowing, hard-coded credentials, production secrets, unexplained lint suppression, disabled tests, skipped security checks, or temporary production flags.
 
-The actual Middleware HTTP handlers and provider-local restricted gateways live outside this repository and require separate audits.
+## Test before push
 
-## Test entry points
+Run applicable formatting, lint, types, unit, integration, contract/OpenAPI, migration, security, secret scan, and git diff --check gates before every checkpoint push. Do not knowingly push broken code.
 
-Workspace commands:
+## Push discipline
 
-```bash
-pnpm contracts:validate
-pnpm build
-pnpm typecheck
-pnpm test
-pnpm --filter @codestra/social-sdk test:pact
-pnpm pacts:validate
-```
+After each atomic checkpoint: validate, commit intended changes, push branch, verify remote SHA, update mission status, record blockers. Do not end with unexplained uncommitted implementation work.
 
-Current focused tests:
+## Commit standard
 
-- `packages/contracts/test/contracts.test.ts`
-- `packages/social-sdk/test/client.test.ts`
-- `packages/social-sdk/test/pact/social-post.pact.test.ts`
-- `packages/webhook-sdk/test/webhook.test.ts`
-- `packages/connector-kit/test/runner.test.ts`
-- `packages/provider-adapters/test/adapters.test.ts`
-- `packages/svix-delivery/test/delivery.test.ts`
+One understandable unit per commit. Avoid meaningless messages such as update, fix, changes, or stuff.
 
-Workflow entry points:
+## Parent synchronization
 
-- `.github/workflows/ci.yml`
-- `.github/workflows/contracts.yml`
-- `.github/workflows/compatibility.yml`
-- `.github/workflows/sdk-generation.yml`
-- `.github/workflows/camel-gateway.yml`
+Before merge request: fetch remote; compare parent; integrate current parent safely; resolve conflicts intentionally; rerun required tests; push refreshed exact branch; require CI on the new exact SHA. Old CI evidence does not certify changed code.
 
-There is no shared `vitest.config.*` at the audited baseline. Do not interpret `--passWithNoTests` as meaningful behavioral coverage.
+## Protected branches
 
-## Change protocol
+Do not directly develop on main, development, testing, staging, or production. Protected branches move only through approved pull requests and required checks. Force pushes are prohibited.
 
-“Fix all” is not a safe unit of work. Work in dependency-ordered slices:
+## Production effects default OFF
 
-1. Record the defect, affected boundary, failure mode, and acceptance tests.
-2. Change one security or correctness concern per branch whenever practical.
-3. Add a regression test that fails before the fix.
-4. Validate the exact head SHA with deterministic dependencies.
-5. Update contracts, handwritten types, SDKs, Pact files, generated clients, and documentation together when the public behavior changes.
-6. Keep optional delivery and protocol integrations disabled unless a separately reviewed activation change explicitly enables them.
+Unless a separately approved production activation mission changes them:
 
-## Non-negotiable safety rules
+PRODUCTION_GO=NO
+LIVE_CAPABILITIES_ENABLED=NO
+EXTERNAL_EFFECTS=false
 
-- Never commit credentials, tenant mappings, production host addresses, or private keys.
-- Never let n8n or an SDK bypass Middleware for a mutation.
-- Never release an idempotency claim after an external mutation has an unknown outcome; reconcile or retain an indeterminate state instead.
-- Bind idempotency to tenant, operation, and a canonical request fingerprint.
-- Verify webhook signatures over the exact raw body before parsing, then enforce timestamp and replay protection in durable tenant-scoped storage.
-- Keep outbound API credentials separate from inbound trigger credentials.
-- Treat webhook destination URLs as SSRF-sensitive and validate resolution, redirects, and private/reserved address ranges at delivery time.
-- Do not describe a branch as production-ready solely because compilation or a small unit-test suite is green.
+Implementation missions must not silently enable calls, SMS, email, WhatsApp, payments, social publishing, production database mutation, production infrastructure changes, credential issuance, or external media publishing.
+
+## Completion evidence
+
+Every completed subsection records final branch/SHA, parent SHA, changed files, tests/results, security result, migration result, API/contract result, dependency changes, limitations, remaining TODOs, CI result, and reviewer result. Missing evidence means not COMPLETE.
+
+## COMPLETE
+
+COMPLETE requires implementation present, applicable local/integration/contract/security tests green, current documentation, valid migrations, branch pushed, clean tree, local/remote SHA match, and no unresolved blockers.
+
+## CERTIFIED
+
+CERTIFIED additionally requires exact-SHA CI green, independent review, parent integration success, regression/security/performance gates as applicable, no unresolved critical/high defects, and stored completion evidence. Only CERTIFIED work may promote.
+
+## Cleanup
+
+After parent integration, verify exact intended changes are present, remove obsolete temporary worktrees/locks, archive evidence, prune stale local refs, preserve unmerged branches, and retain recovery references where required.
+
+## Fail closed
+
+When safety cannot be proven, stop and mark BLOCKED. Never guess around secrets, migrations, authorization, branch ancestry, production effects, destructive operations, or incomplete CI evidence.
