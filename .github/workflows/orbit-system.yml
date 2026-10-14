@@ -62,7 +62,7 @@ jobs:
           printf '%s\n' "${{ github.event.pull_request.head.sha || github.sha }}" > orbit/build/SOURCE_COMMIT
           test "$(find orbit/build -maxdepth 1 -name '*.tgz' | wc -l)" -eq 9
       - name: Upload exact-head candidate packages
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9
         with:
           name: codestra-orbit-v2-${{ github.event.pull_request.head.sha || github.sha }}
           path: orbit/build/
