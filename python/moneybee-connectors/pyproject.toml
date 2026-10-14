@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Fail-closed server-side connector contracts for MoneyBee and Codestra Middleware"
 requires-python = ">=3.13"
 license = { text = "MIT" }
-dependencies = ["httpx==0.28.1", "pydantic==2.13.5"]
+dependencies = ["httpx==0.28.1", "pydantic==2.14.0"]
 
 [project.optional-dependencies]
 test = [
