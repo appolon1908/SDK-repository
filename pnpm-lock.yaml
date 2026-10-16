@@ -382,8 +382,8 @@ importers:
         specifier: workspace:^
         version: link:../contracts
       '@pact-foundation/pact':
-        specifier: ^17.1.3
-        version: 17.1.3
+        specifier: ^17.1.4
+        version: 17.1.4
     devDependencies:
       typescript:
         specifier: ^5.9.2
@@ -1096,49 +1096,49 @@ packages:
   '@open-draft/until@2.1.0':
     resolution: {integrity: sha512-U69T3ItWHvLwGg5eJ0n3I62nWuE6ilHlmz7zM0npLBRvPRd7e6NYmg54vvRtP5mZG7kZqZCFVdsTWo7BPtBujg==}
 
-  '@pact-foundation/pact-core-darwin-arm64@20.1.0':
-    resolution: {integrity: sha512-GsQ1vgrcmfGFVzmudvvXthPrd53tarSxrSOBl9TvUJsnhCF/qENYe5hTYWXiAtCpugB3g7V8/J+iOg5qrtPhOw==}
+  '@pact-foundation/pact-core-darwin-arm64@20.1.1':
+    resolution: {integrity: sha512-rw94IiIIBHhT+9cHbERRvLMKNS9Jp8V+5ZBql6Ltm7Q6nk5xpXIfASjHJOecysZGB7JtIJ5lWWmTaGlZ9Zkdtw==}
     cpu: [arm64]
     os: [darwin]
 
-  '@pact-foundation/pact-core-darwin-x64@20.1.0':
-    resolution: {integrity: sha512-ZQdwQJtSwNPCeMxIfl8XJPeizohPh7jquS6JBNw20EmSKg5eCVWIw3hdKuxZuIYGt/zze05ky8Z45nzn3qvHiQ==}
+  '@pact-foundation/pact-core-darwin-x64@20.1.1':
+    resolution: {integrity: sha512-YJCZ6aELa6spFBGZXhE55YbrqF++YwyneUGYyEL80AVv06iVaW3YcBTWo4A0JBrh47f3TkE1OKgdjyt3NbSjBg==}
     cpu: [x64]
     os: [darwin]
 
-  '@pact-foundation/pact-core-linux-arm64-glibc@20.1.0':
-    resolution: {integrity: sha512-Jy+zd2tEL5jAbOf2PcW/xvf1onJBea7IzuFZMIKs+Jh0dl0c+9M7eg8L13plzGU4T3xhOzMn5X8IXyajYt2iIQ==}
+  '@pact-foundation/pact-core-linux-arm64-glibc@20.1.1':
+    resolution: {integrity: sha512-ye2pfYjPTcqFKU5E0GoTzUPx4tP8zP8N5HrN1CP+J0/0E4fE6sUrwOfb3zLgVjWB0woJl9FPGZyWU9Yp55HWhw==}
     cpu: [arm64]
     os: [linux]
 
-  '@pact-foundation/pact-core-linux-arm64-musl@20.1.0':
-    resolution: {integrity: sha512-8yY9ckAj0Fx/wojtsdonf7GEdTEfdvD+yzllZlmwCbfSGqA7dsbThVtSAjt+myylce82YSqxzmgqPJJn5GSm3w==}
+  '@pact-foundation/pact-core-linux-arm64-musl@20.1.1':
+    resolution: {integrity: sha512-R0cDYLe2chsI50Lio00VASsBMz61J/dukV6FclZecMW1LIbnikBfwlXI9y6kVfe69gBw8KoC1C8T0DVHp/PDxw==}
     cpu: [arm64]
     os: [linux]
 
-  '@pact-foundation/pact-core-linux-x64-glibc@20.1.0':
-    resolution: {integrity: sha512-S4avgkfvM9fe2dtnAVUw8FRRs4Bjj4YMcrDcoGondf58mQtIAnsNuKVrmBjfz29qGTxb4amopTTlQNW6w8VIew==}
+  '@pact-foundation/pact-core-linux-x64-glibc@20.1.1':
+    resolution: {integrity: sha512-xhWXFGQSmwuBza8FA058bcZCyXRnRgT+sMdjKO/TfhfqA8tUNIVCh+SRP2nW1W+Il0p5aU0JUwfA5vVr56b+Og==}
     cpu: [x64]
     os: [linux]
 
-  '@pact-foundation/pact-core-linux-x64-musl@20.1.0':
-    resolution: {integrity: sha512-o7qzQ4C4mBYpBCDmtGssGurCTFI/9vuqP1T8VavyeTbyeZThI9j2iWTpeNOmKlrI5+jnaWHYNeuwpqh6FFRurQ==}
+  '@pact-foundation/pact-core-linux-x64-musl@20.1.1':
+    resolution: {integrity: sha512-xIiDZCpF8tqRqaUDswmwchxLpfAb6s27zihjLb+z/ti1W+I+SYIh3IyEDEXPY4QZB4vLLPHhD/3+XWJO8LgsDw==}
     cpu: [x64]
     os: [linux]
 
-  '@pact-foundation/pact-core-windows-x64@20.1.0':
-    resolution: {integrity: sha512-EutN/FQy/Fa6y5k0+Kfqy9o6uLzcz9J4y6aq6x+AsBpsPIakBYYugCZzXt6WZ+W9jzgY0cNtwOGjkWZI/gUucA==}
+  '@pact-foundation/pact-core-windows-x64@20.1.1':
+    resolution: {integrity: sha512-Ys13bJdbwd2WMu+xI9ay+g1yF1hJR6RMcJ7r5wMH+bmPg+IyFyTCt4i+PQlriMGoeW8DMNL/EA7G6qAqgnVcfQ==}
     cpu: [x64]
     os: [win32]
 
-  '@pact-foundation/pact-core@20.1.0':
-    resolution: {integrity: sha512-VPMV5X/gq5BTcQH7lbmmj5v4O1p+rG5iHemghrjNz+RFMHjISf657uIL5pZvhkOilHfGH2QuAvMgwRP16g2isw==}
+  '@pact-foundation/pact-core@20.1.1':
+    resolution: {integrity: sha512-po5J/G8EG6s/7ZAm+bbDoVssSsCFzFc2bZc4mA8355x33YNhPd9RNB+2vR55HK/97HHSzQTMpKope5KDC+6QpQ==}
     engines: {node: '>=22'}
     cpu: [x64, ia32, arm64]
     os: [darwin, linux, win32]
 
-  '@pact-foundation/pact@17.1.3':
-    resolution: {integrity: sha512-UUY/RkgWgQj1SZ+kT0ZjB3e47Gge5rnSfRhhk6SBnwPfQ3KQMIjWy3TUfRlPQgtEXTbDM5kojj71vsEcQzesnQ==}
+  '@pact-foundation/pact@17.1.4':
+    resolution: {integrity: sha512-HrMX+QA/B2Afto6yuQDeMDtTHLv2wtiqdmCIcodlzIlnYrCUg9HT1tFlOtFkjKZ3gsnnc52eeb+9Nm7IZGCW/w==}
     engines: {node: '>=22'}
 
   '@pinojs/redact@0.4.0':
@@ -2671,8 +2671,8 @@ packages:
     resolution: {integrity: sha512-U+5l2KrcMNOUPYvazA3h5ekF80FHTUG+87SEAmHZmolh1M+i/WyTCxVzmi+tidIa1tM4BSe8g2Y/D3loWDjj+w==}
     engines: {node: '>=4'}
 
-  range-parser@1.2.1:
-    resolution: {integrity: sha512-Hrgsx+orqoygnmhFbKaHE6c296J+HTAQXoxEF6gNupROmmGJRoyzfG3ccAveqCBrwr/2yxQ5BVd/GTl5agOwSg==}
+  range-parser@1.3.0:
+    resolution: {integrity: sha512-hek2mFQpPuI4E1BBKrSto+BU3e3x4xuarsbiwr3+lf7p44juvFMV0XFWQAP3xUyqXA4RrXLIoaSUGbSt056ZMw==}
     engines: {node: '>= 0.6'}
 
   raw-body@3.0.2:
@@ -3699,28 +3699,28 @@ snapshots:
 
   '@open-draft/until@2.1.0': {}
 
-  '@pact-foundation/pact-core-darwin-arm64@20.1.0':
+  '@pact-foundation/pact-core-darwin-arm64@20.1.1':
     optional: true
 
-  '@pact-foundation/pact-core-darwin-x64@20.1.0':
+  '@pact-foundation/pact-core-darwin-x64@20.1.1':
     optional: true
 
-  '@pact-foundation/pact-core-linux-arm64-glibc@20.1.0':
+  '@pact-foundation/pact-core-linux-arm64-glibc@20.1.1':
     optional: true
 
-  '@pact-foundation/pact-core-linux-arm64-musl@20.1.0':
+  '@pact-foundation/pact-core-linux-arm64-musl@20.1.1':
     optional: true
 
-  '@pact-foundation/pact-core-linux-x64-glibc@20.1.0':
+  '@pact-foundation/pact-core-linux-x64-glibc@20.1.1':
     optional: true
 
-  '@pact-foundation/pact-core-linux-x64-musl@20.1.0':
+  '@pact-foundation/pact-core-linux-x64-musl@20.1.1':
     optional: true
 
-  '@pact-foundation/pact-core-windows-x64@20.1.0':
+  '@pact-foundation/pact-core-windows-x64@20.1.1':
     optional: true
 
-  '@pact-foundation/pact-core@20.1.0':
+  '@pact-foundation/pact-core@20.1.1':
     dependencies:
       check-types: 11.2.3
       detect-libc: 2.1.2
@@ -3729,17 +3729,17 @@ snapshots:
       pino-pretty: 13.1.3
       underscore: 1.13.8
     optionalDependencies:
-      '@pact-foundation/pact-core-darwin-arm64': 20.1.0
-      '@pact-foundation/pact-core-darwin-x64': 20.1.0
-      '@pact-foundation/pact-core-linux-arm64-glibc': 20.1.0
-      '@pact-foundation/pact-core-linux-arm64-musl': 20.1.0
-      '@pact-foundation/pact-core-linux-x64-glibc': 20.1.0
-      '@pact-foundation/pact-core-linux-x64-musl': 20.1.0
-      '@pact-foundation/pact-core-windows-x64': 20.1.0
+      '@pact-foundation/pact-core-darwin-arm64': 20.1.1
+      '@pact-foundation/pact-core-darwin-x64': 20.1.1
+      '@pact-foundation/pact-core-linux-arm64-glibc': 20.1.1
+      '@pact-foundation/pact-core-linux-arm64-musl': 20.1.1
+      '@pact-foundation/pact-core-linux-x64-glibc': 20.1.1
+      '@pact-foundation/pact-core-linux-x64-musl': 20.1.1
+      '@pact-foundation/pact-core-windows-x64': 20.1.1
 
-  '@pact-foundation/pact@17.1.3':
+  '@pact-foundation/pact@17.1.4':
     dependencies:
-      '@pact-foundation/pact-core': 20.1.0
+      '@pact-foundation/pact-core': 20.1.1
       '@scarf/scarf': 1.4.0
       axios: 1.20.0
       body-parser: 2.3.0
@@ -4665,7 +4665,7 @@ snapshots:
       parseurl: 1.3.3
       proxy-addr: 2.0.7
       qs: 6.16.0
-      range-parser: 1.2.1
+      range-parser: 1.3.0
       router: 2.2.0
       send: 1.2.1
       serve-static: 2.2.1
@@ -5328,7 +5328,7 @@ snapshots:
       drange: 1.1.1
       ret: 0.2.2
 
-  range-parser@1.2.1: {}
+  range-parser@1.3.0: {}
 
   raw-body@3.0.2:
     dependencies:
@@ -5460,7 +5460,7 @@ snapshots:
       mime-types: 3.0.2
       ms: 2.1.3
       on-finished: 2.4.1
-      range-parser: 1.2.1
+      range-parser: 1.3.0
       statuses: 2.0.2
     transitivePeerDependencies:
       - supports-color
