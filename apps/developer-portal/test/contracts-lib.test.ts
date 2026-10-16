@@ -15,10 +15,26 @@ describe("loadEventCatalogue", () => {
         "codestra.communications.reputation.changed.v1",
         "codestra.events.call_disposition_updated",
         "codestra.events.sms_received",
+        "codestra.integration.events",
+        "codestra.klyrow.events",
+        "codestra.telnexa.events",
+        "codestra.vicidial.events",
         "codestra.social.post.status.v1",
         "codestra.webhook.delivery.status.v1",
       ].sort(),
     );
+  });
+
+  it("documents internal business envelopes without offering them as customer subscriptions", () => {
+    const internal = loadEventCatalogue().filter((channel) => channel.exposure === "internal");
+    expect(internal).toHaveLength(4);
+    for (const channel of internal) {
+      expect(channel.messages[0]?.cloudEventType).not.toBe("unknown");
+      expect(channel.messages[0]?.fields.map((field) => field.name)).toEqual(
+        expect.arrayContaining(["id", "type", "source", "tenant_id", "version", "data"]),
+      );
+    }
+    expect(listKnownEventTypes()).not.toContain("unknown");
   });
 
   it("resolves the externally-referenced JSON Schema for the social post status message", () => {
