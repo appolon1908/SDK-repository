@@ -23,7 +23,7 @@
     "n8n-workflow": ">=1.0.0 <3.0.0"
   },
   "devDependencies": {
-    "typescript": "^5.9.2",
+    "typescript": "^7.0.2",
     "vitest": "^4.1.11"
   },
   "n8n": {
