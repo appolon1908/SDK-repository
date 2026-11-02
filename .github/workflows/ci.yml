@@ -101,3 +101,23 @@ jobs:
         run: pnpm typecheck
       - name: Test workspace with coverage floor
         run: pnpm test:coverage
+
+  sdk-source-gate:
+    name: codestra/sdk-source-validation
+    needs: [secret-scan, moneybee-python-connectors, verify]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    permissions:
+      contents: read
+    steps:
+      - name: Require every source prerequisite to succeed
+        env:
+          RESULT_0: ${{ needs.secret-scan.result }}
+          RESULT_1: ${{ needs.moneybee-python-connectors.result }}
+          RESULT_2: ${{ needs.verify.result }}
+        run: |
+          set -eu
+          test "$RESULT_0" = success
+          test "$RESULT_1" = success
+          test "$RESULT_2" = success

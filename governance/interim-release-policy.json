@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "policy_kind": "source_merge",
+  "repository": "appolon1908/SDK-repository",
+  "authorization_date": "2026-11-02",
+  "required_checks": [
+    {
+      "context": "secret-scan",
+      "integration_id": 15368,
+      "workflow": ".github/workflows/ci.yml"
+    },
+    {
+      "context": "moneybee-python-connectors",
+      "integration_id": 15368,
+      "workflow": ".github/workflows/ci.yml"
+    },
+    {
+      "context": "compatibility",
+      "integration_id": 15368,
+      "workflow": ".github/workflows/compatibility.yml"
+    },
+    {
+      "context": "validate",
+      "integration_id": 15368,
+      "workflow": ".github/workflows/contracts.yml"
+    },
+    {
+      "context": "certify",
+      "integration_id": 15368,
+      "workflow": ".github/workflows/marketing-sdk-stage5.yml"
+    },
+    {
+      "context": "generate",
+      "integration_id": 15368,
+      "workflow": ".github/workflows/sdk-generation.yml"
+    },
+    {
+      "context": "codestra/sdk-source-validation",
+      "integration_id": 15368,
+      "workflow": ".github/workflows/ci.yml"
+    },
+    {
+      "context": "codestra/sdk-middleware-validation",
+      "integration_id": 15368,
+      "workflow": ".github/workflows/middleware.yml"
+    },
+    {
+      "context": "codestra/sdk-orbit-authority",
+      "integration_id": 15368,
+      "workflow": ".github/workflows/orbit-system.yml"
+    }
+  ],
+  "replaces_contexts": [
+    "codestra-control-plane",
+    "codestra/control-plane"
+  ],
+  "preserve": [
+    "other_required_checks",
+    "review_requirements",
+    "ref_conditions",
+    "bypass_actors",
+    "enforcement",
+    "force_push_protection",
+    "deletion_protection",
+    "deployment_authority"
+  ],
+  "production_activation_authorized": false,
+  "note": "GitHub rulesets remain the enforcement authority. This source-validation policy is not custom-controller certification or deployment authorization."
+}

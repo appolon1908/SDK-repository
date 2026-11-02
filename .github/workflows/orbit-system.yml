@@ -2,11 +2,6 @@ name: Codestra Orbit authority
 
 on:
   pull_request:
-    paths:
-      - "orbit/**"
-      - "scripts/validate-orbit-system.mjs"
-      - "package.json"
-      - ".github/workflows/orbit-system.yml"
   push:
     branches: [main, development, staging, production]
     paths:
@@ -69,3 +64,19 @@ jobs:
           if-no-files-found: error
           retention-days: 14
           compression-level: 0
+
+  orbit-source-gate:
+    name: codestra/sdk-orbit-authority
+    needs: [authority]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    permissions:
+      contents: read
+    steps:
+      - name: Require every source prerequisite to succeed
+        env:
+          RESULT_0: ${{ needs.authority.result }}
+        run: |
+          set -eu
+          test "$RESULT_0" = success
