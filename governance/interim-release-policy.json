@@ -15,11 +15,6 @@
       "workflow": ".github/workflows/ci.yml"
     },
     {
-      "context": "verify",
-      "integration_id": 15368,
-      "workflow": ".github/workflows/ci.yml"
-    },
-    {
       "context": "compatibility",
       "integration_id": 15368,
       "workflow": ".github/workflows/compatibility.yml"
@@ -38,6 +33,21 @@
       "context": "generate",
       "integration_id": 15368,
       "workflow": ".github/workflows/sdk-generation.yml"
+    },
+    {
+      "context": "codestra/sdk-source-validation",
+      "integration_id": 15368,
+      "workflow": ".github/workflows/ci.yml"
+    },
+    {
+      "context": "codestra/sdk-middleware-validation",
+      "integration_id": 15368,
+      "workflow": ".github/workflows/middleware.yml"
+    },
+    {
+      "context": "codestra/sdk-orbit-authority",
+      "integration_id": 15368,
+      "workflow": ".github/workflows/orbit-system.yml"
     }
   ],
   "replaces_contexts": [

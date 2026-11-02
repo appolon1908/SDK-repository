@@ -2,15 +2,6 @@ name: Middleware service
 
 on:
   pull_request:
-    paths:
-      - "services/middleware/**"
-      - "packages/contracts/**"
-      - "packages/connector-kit/**"
-      - "packages/webhook-sdk/**"
-      - "pnpm-lock.yaml"
-      - "pnpm-workspace.yaml"
-      - ".github/workflows/middleware.yml"
-
 permissions:
   contents: read
 
@@ -66,3 +57,19 @@ jobs:
         run: pnpm --filter @codestra/middleware typecheck
       - name: Apply Prisma migrations and run integration tests against real Postgres
         run: pnpm --filter @codestra/middleware test
+
+  middleware-source-gate:
+    name: codestra/sdk-middleware-validation
+    needs: [verify]
+    if: ${{ always() }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    permissions:
+      contents: read
+    steps:
+      - name: Require every source prerequisite to succeed
+        env:
+          RESULT_0: ${{ needs.verify.result }}
+        run: |
+          set -eu
+          test "$RESULT_0" = success
